@@ -75,6 +75,7 @@ var handleChatnodeAddition = async function(object, new_chatnode){
 
 	try{
 
+		console.log('TRIGGERED NEW CHATNODE ADDITION')
 		const {count, last_message} = messageCountAndLastMessageToRelevantChatNode(object, new_chatnode.room_string)
 
 		// 1 store in chatnode storage
@@ -178,6 +179,8 @@ var handleMessageAddition = async function(object, new_message){
 		// }
 
 	}
+
+	let {senders_details} = new_message
 
 	sort_and_make_chatnodes_proper(object)
 // GETTING OTHER PERSONS NUMBER FROM ROOM_STRING

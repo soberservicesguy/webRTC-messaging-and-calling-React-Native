@@ -113,6 +113,7 @@ export default class LoginScreen extends Component {
 
 		try{
 
+			console.log(`MAKING REQUEST AT ${utils.baseURL + '/users/create-user'}`)
 			// console.log({user_name: this.state.user_name, phone_number: this.state.phone_number})
 			axios.post(utils.baseURL + '/users/create-user', 
 				{user_name: this.state.user_name, user_phone_number: this.state.phone_number}
@@ -139,7 +140,7 @@ export default class LoginScreen extends Component {
 			// return 
 
 		} catch (err) {
-
+			console.log(err)
 			my_logger('err', err, 'error', 'storeNameSpaceAtBackend' )
 
 		}

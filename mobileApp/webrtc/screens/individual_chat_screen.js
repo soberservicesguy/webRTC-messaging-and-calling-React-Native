@@ -224,6 +224,8 @@ export default class IndividualChatScreen extends Component {
 
 	sendMessage(){
 
+		console.log('ENTEREED 1')
+
 		let message = this.state.message_being_typed
 
 		var currentDate = new Date().toLocaleDateString("en-US").split("/").join(" | ");
@@ -239,6 +241,7 @@ export default class IndividualChatScreen extends Component {
 
 		// room_string = ( Number(number1) < Number(number2) ) ? `${number1}-${number2}+` : `${number2}-${number1}+`
 
+		console.log('ENTEREED 2')
 		console.log('room string in indivdual screen is below')
 		console.log(this.props.current_chat_screen_room_string)
 
@@ -250,9 +253,11 @@ export default class IndividualChatScreen extends Component {
 			senders_details: `${this.props.own_name}-${this.props.own_number}+`,
 			socketID:{local: this.props.socket_id}
 		}
+		console.log('ENTEREED 3')
 		
 		eventEmitter.emit('new_entry_in_message', this, message)
 
+		console.log('ENTEREED 4')
 		// this.setState( prev => ({...prev, messages: [...prev.messages, ...this.props.new_messages_of_current_room]}) ) // I THINK THIS IS DOUBING IT
 		// this.setState( prev => ({...prev, messages: [...prev.messages, message, ...this.props.new_messages_of_current_room]}) ) // REMOVED message as it was being doubled
 	// OLD

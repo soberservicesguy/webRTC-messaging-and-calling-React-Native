@@ -96,7 +96,7 @@ assign_socket_events = async (socket_object, object) => {
 		console.log('======================= connection-success TRIGGERED ====================')
 		// object.getLocalStream() // SHIFTED TO online-peers event
 		object.props.set_own_socket_id( data.success )
-		object.props.set_socket( object.socket )
+		// object.props.set_socket( object.socket )
 
 		console.log(data.success)
 		let my_socket_id = data.success
@@ -1448,7 +1448,8 @@ goOnline = async (object) => {
 		object.socket = io.connect(
 			// `${utils.serviceIP}/${namespace}`,
 			// `${utils.serviceIP}/11111`,
-			`${utils.serviceIP}/dummy_demonstration`,
+			`${utils.baseURL}/`,
+			// `${utils.baseURL}/dummy-demonstration`,
 
 			{	
 				transports: ["websocket"],
@@ -1461,6 +1462,13 @@ goOnline = async (object) => {
 				}
 			}
 		)
+
+		// console.log('object.socket')
+		// console.log(object.socket)
+
+		console.log('SETTING SOCKET IN REDUX')
+		object.props.set_socket( object.socket )
+
 
 		assign_socket_events(object.socket, object)
 		console.log('--------------------GONE ONLINE, CREATED SOCKET-----------------')

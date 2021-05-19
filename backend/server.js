@@ -65,14 +65,20 @@ function refresh_all_dbs(){
 refresh_all_dbs()
 
 
+const app = express()
+const port = 8080
+const httpServer = require("http").createServer(app);
 
 var io = require('socket.io')
-({
-	path: '/io/webrtc' // this is the path for socket io
-})
+(
+	httpServer,
+	{
+		path: '/io/webrtc' // this is the path for socket io
+	}
+)
 
-const app = express()
-const port = 8082
+
+// const io = require("socket.io")(httpServer, options);
 
 // Databasified
 const rooms = {}
@@ -80,7 +86,9 @@ const rooms = {}
 
 // https://www.tutorialspoint.com/socket.io/socket.io_namespaces.htm
 // const peers = io.of('/webrtcPeer') // this is the namespace 11111
-const peers = io.of('/dummy_demonstration')
+
+
+// const peers = io.of('/dummy-demonstration')
 
 
 // const namespaces_being_alive = []
@@ -404,21 +412,11 @@ let peers_list = new Map()
 
 // app.get('/', (req, res) => res.send('Hello World!!!!!'))
 app.use(express.json())
+app.use(express.urlencoded({extended: true}));
+
 app.use(require('./routes'));
 
-//https://expressjs.com/en/guide/writing-middleware.html
-app.use(express.static(__dirname + '/build'))
-app.get('/', (req, res, next) => { //default room
-		res.sendFile(__dirname + '/build/index.html')
-})
 
-app.get('/:room', (req, res, next) => {
-	res.sendFile(__dirname + '/build/index.html')
-	// res.status(200).json({data: 'test'})
-})
-
-// ************************************* //
-// ************************************* //
 app.post('/:room', (req, res, next) => {
 	// res.sendFile(__dirname + '/build/index.html')
 	console.log('REQUEST', req.body)
@@ -426,13 +424,9 @@ app.post('/:room', (req, res, next) => {
 })
 
 
-// app.get('/:test', (req, res, next) => { //default room
-//   res.status(200).json({data: 'test'})
-// })
+// const server = app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+// io.listen(server)
 
-const server = app.listen(port, () => console.log(`Example app listening on port ${port}!`))
-
-io.listen(server)
 
 // default namespace
 // WHEN CONNECTION IS MADE, ADD THE NAMESPACE INTO LIVE NAMESPACE, AND ASSIGN EVENTS
@@ -461,8 +455,12 @@ io.listen(server)
 // 	}
 // })
 
+
 // COMMENTING OFF SINCE SHIFTED
-peers.on('connection', socket => {
+io.on('connection', socket => {
+	console.log(Object.keys(socket))
+	console.log({id:socket.id, room:socket._rooms})
+
 	console.log('-------------socket connection established-----------------')
 
 	// store_socket_in_db_if_not_in_it(socket)
@@ -583,8 +581,6 @@ peers.on('connection', socket => {
 			}
 		}
 	}
-
-	console.log('-------------------new message EMMITTING------------')
 	
 
 	let online_users = [] // their phonenumbers
@@ -625,8 +621,6 @@ peers.on('connection', socket => {
 			user_object.offline_messages.push( data.message )
 		})
 	})
-	console.log('-------------------new message EMMITTED------------')
-
 
 	socket.on('disconnect', () => {
 		
@@ -781,3 +775,7 @@ peers.on('connection', socket => {
 	my_logger(null, null, 'function_exiting', 'peers_on_connection', 0)
 
 })
+
+
+
+httpServer.listen(port);

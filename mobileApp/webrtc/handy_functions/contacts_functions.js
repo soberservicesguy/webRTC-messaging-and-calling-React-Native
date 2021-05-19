@@ -7,7 +7,7 @@ const { my_logger } = require('./my_custom_logger')
 // WORK ON THIS, PREMISSIONS ARE SEPARETE NOW, REMOVE FROMM HERE
 function check_permission_and_save_contact(object, displayName, number){
 
-	my_logger(null, null, 'function_entering', 'check_permission_and_save_contact', 0)
+	// my_logger(null, null, 'function_entering', 'check_permission_and_save_contact', 0)
 
 	try{
 
@@ -50,7 +50,7 @@ function check_permission_and_save_contact(object, displayName, number){
 				.then(() => console.log('new contact saved'))
 			})
 			.catch((err) => {
-				my_logger('err', err, 'error', 'check_permission_and_save_contact', 0)
+				// my_logger('err', err, 'error', 'check_permission_and_save_contact', 0)
 			})
 
 		} else {
@@ -70,7 +70,8 @@ function check_permission_and_save_contact(object, displayName, number){
 
 		}
 
-		Contacts.getAll().then(contacts => console.log(JSON.stringify(contacts) ))
+		// to see all contacts
+		// Contacts.getAll().then(contacts => console.log(JSON.stringify(contacts) ))
 
 		
 
@@ -80,19 +81,19 @@ function check_permission_and_save_contact(object, displayName, number){
 
 	} catch (error) {
 
-		my_logger('error', error, 'error', 'check_permission_and_save_contact', 0)
+		// my_logger('error', error, 'error', 'check_permission_and_save_contact', 0)
 
 
 	}
 
-	my_logger(null, null, 'function_exiting', 'check_permission_and_save_contact', 0)
+	// my_logger(null, null, 'function_exiting', 'check_permission_and_save_contact', 0)
 	
 }
 
 
 function show_all_contacts_and_set_in_state(object){
 
-	my_logger(null, null, 'function_entering', 'show_all_contacts_and_set_in_state', 0)
+	// my_logger(null, null, 'function_entering', 'show_all_contacts_and_set_in_state', 0)
 
 	try{
 
@@ -105,18 +106,18 @@ function show_all_contacts_and_set_in_state(object){
 
 	} catch (err) {
 
-		my_logger('err', err, 'error', 'show_all_contacts_and_set_in_state', 0)
+		// my_logger('err', err, 'error', 'show_all_contacts_and_set_in_state', 0)
 
 	}
 
-	my_logger(null, null, 'function_exiting', 'show_all_contacts_and_set_in_state', 0)
+	// my_logger(null, null, 'function_exiting', 'show_all_contacts_and_set_in_state', 0)
 
 }
 
 
 function get_all_contacts_and_save_in_storage(){
 
-	my_logger(null, null, 'function_entering', 'get_all_contacts_and_save_in_storage', 0)
+	// my_logger(null, null, 'function_entering', 'get_all_contacts_and_save_in_storage', 0)
 
 	try{
 
@@ -131,12 +132,12 @@ function get_all_contacts_and_save_in_storage(){
 
 	} catch (err) {
 
-		my_logger('err', err, 'error', 'get_all_contacts_and_save_in_storage', 0)
+		// my_logger('err', err, 'error', 'get_all_contacts_and_save_in_storage', 0)
 
 
 	}
 
-	my_logger(null, null, 'function_exiting', 'get_all_contacts_and_save_in_storage', 0)
+	// my_logger(null, null, 'function_exiting', 'get_all_contacts_and_save_in_storage', 0)
 	
 }
 
@@ -144,7 +145,7 @@ function get_all_contacts_and_save_in_storage(){
 // REQEUSTING PERMISSION AND GETTING AND SAVING CONTACTS
 function request_contacts_permission_and_then_save_in_storage(){
 
-	my_logger(null, null, 'function_entering', 'request_contacts_permission_and_then_save_in_storage', 0)
+	// my_logger(null, null, 'function_entering', 'request_contacts_permission_and_then_save_in_storage', 0)
 
 	try{
 
@@ -165,11 +166,11 @@ function request_contacts_permission_and_then_save_in_storage(){
 
 	} catch (err) {
 
-		my_logger('err', err, 'error', 'request_contacts_permission_and_then_save_in_storage', 0)
+		// my_logger('err', err, 'error', 'request_contacts_permission_and_then_save_in_storage', 0)
 
 	}
 
-	my_logger(null, null, 'function_exiting', 'request_contacts_permission_and_then_save_in_storage', 0)
+	// my_logger(null, null, 'function_exiting', 'request_contacts_permission_and_then_save_in_storage', 0)
 
 }
 
@@ -177,7 +178,7 @@ function request_contacts_permission_and_then_save_in_storage(){
 // Currently all fields from the contact record except for thumbnailPath are supported for writing
 function add_new_contact(){
 
-	my_logger(null, null, 'function_entering', 'add_new_contact', 0)
+	// my_logger(null, null, 'function_entering', 'add_new_contact', 0)
 
 	try{
 
@@ -200,11 +201,11 @@ function add_new_contact(){
 
 	} catch (err) {
 
-		my_logger('err', err, 'error', 'add_new_contact', 0)
+		// my_logger('err', err, 'error', 'add_new_contact', 0)
 
 	}
 
-	my_logger(null, null, 'function_exiting', 'add_new_contact', 0)
+	// my_logger(null, null, 'function_exiting', 'add_new_contact', 0)
 	
 }
 
@@ -213,7 +214,7 @@ function add_new_contact(){
 // FIND A PERSON FROM CONTACTS
 function find_someone_in_contacts(){
 
-	my_logger(null, null, 'function_entering', 'find_someone_in_contacts', 0)
+	// my_logger(null, null, 'function_entering', 'find_someone_in_contacts', 0)
 
 	try{
 
@@ -233,12 +234,12 @@ function find_someone_in_contacts(){
 
 	} catch (err) {
 
-		my_logger('err', err, 'error', 'find_someone_in_contacts', 0)
+		// my_logger('err', err, 'error', 'find_someone_in_contacts', 0)
 
 
 	}
 
-	my_logger(null, null, 'function_exiting', 'find_someone_in_contacts', 0)
+	// my_logger(null, null, 'function_exiting', 'find_someone_in_contacts', 0)
 	
 }
 
@@ -246,7 +247,7 @@ function find_someone_in_contacts(){
 // UPDATING A CONTACT
 function update_contact(){
 
-	my_logger(null, null, 'function_entering', 'update_contact', 0)
+	// my_logger(null, null, 'function_entering', 'update_contact', 0)
 
 	try{
 
@@ -267,12 +268,12 @@ function update_contact(){
 
 	} catch (err) {
 
-		my_logger('err', err, 'error', 'update_contact', 0)
+		// my_logger('err', err, 'error', 'update_contact', 0)
 
 
 	}
 
-	my_logger(null, null, 'function_exiting', 'update_contact', 0)
+	// my_logger(null, null, 'function_exiting', 'update_contact', 0)
 	
 }
 
@@ -280,7 +281,7 @@ function update_contact(){
 // ADD NUMBER TO AN EXISTING CONTACT
 function add_number_to_contact(displayName, number){
 
-	my_logger(null, null, 'function_entering', 'add_number_to_contact', 0)
+	// my_logger(null, null, 'function_entering', 'add_number_to_contact', 0)
 
 	try{
 
@@ -304,11 +305,11 @@ function add_number_to_contact(displayName, number){
 
 	} catch (err) {
 
-		my_logger('err', err, 'error', 'add_number_to_contact', 0)
+		// my_logger('err', err, 'error', 'add_number_to_contact', 0)
 
 	}
 
-	my_logger(null, null, 'function_exiting', 'add_number_to_contact', 0)
+	// my_logger(null, null, 'function_exiting', 'add_number_to_contact', 0)
 	
 }
 
@@ -316,7 +317,7 @@ function add_number_to_contact(displayName, number){
 // DELETE CONTACT BY CONTACT ID
 function delete_contact_with_id(){
 
-	my_logger(null, null, 'function_entering', 'delete_contact_with_id', 0)
+	// my_logger(null, null, 'function_entering', 'delete_contact_with_id', 0)
 
 	try{
 
@@ -329,19 +330,19 @@ function delete_contact_with_id(){
 
 	} catch (err) {
 
-		my_logger('err', err, 'error', 'delete_contact_with_id', 0)
+		// my_logger('err', err, 'error', 'delete_contact_with_id', 0)
 
 
 	}
 
-	my_logger(null, null, 'function_exiting', 'delete_contact_with_id', 0)
+	// my_logger(null, null, 'function_exiting', 'delete_contact_with_id', 0)
 	
 }
 
 // DELETE CONTACT BY CONTACT OBJECT
 function delete_contact_through_object(){
 
-	my_logger(null, null, 'function_entering', 'delete_contact_through_object', 0)
+	// my_logger(null, null, 'function_entering', 'delete_contact_through_object', 0)
 
 	try{
 
@@ -354,12 +355,12 @@ function delete_contact_through_object(){
 
 	} catch (err) {
 
-		my_logger('err', err, 'error', 'delete_contact_through_object', 0)
+		// my_logger('err', err, 'error', 'delete_contact_through_object', 0)
 
 
 	}
 
-	my_logger(null, null, 'function_exiting', 'delete_contact_through_object', 0)
+	// my_logger(null, null, 'function_exiting', 'delete_contact_through_object', 0)
 	
 }
 
@@ -369,7 +370,7 @@ function delete_contact_through_object(){
 // CHECK IF PERMISSIONS GIVEN THEN DO SOMETHING
 function check_permission_and_do_something(){
 
-	my_logger(null, null, 'function_entering', 'check_permission_and_do_something', 0)
+	// my_logger(null, null, 'function_entering', 'check_permission_and_do_something', 0)
 
 	try{
 
@@ -393,12 +394,12 @@ function check_permission_and_do_something(){
 
 	} catch (err) {
 
-		my_logger('err', err, 'error', 'check_permission_and_do_something', 0)
+		// my_logger('err', err, 'error', 'check_permission_and_do_something', 0)
 
 
 	}
 
-	my_logger(null, null, 'function_exiting', 'check_permission_and_do_something', 0)
+	// my_logger(null, null, 'function_exiting', 'check_permission_and_do_something', 0)
 	
 }
 

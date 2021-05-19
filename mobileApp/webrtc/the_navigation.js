@@ -1,26 +1,3 @@
-// there should be difference in screen and cards showing screen 
-// function that changes screen to complete object screen so that it shows when some card is clicked upon
-
-// make reducers proper, # DONE
-
-// (also for adding something in a list and removing from list) # DONE
-
-
-// each screen containing cards should be having provider linking to individual object screen # MANUALLY
-
-
-// NO SCREEN IS BEING CREATED WHICH SHOWS COMPLETE OBJECT, # DONE
-
-
-// each screen should be given a go back callback at top # DONE
-
-// there should be an index for all db entries for react native too, in react we can use endpoint, but here we need something else like SKU etc / id (not recommended to show db id in frontend) # DONE THERE IS OPTION FOR SETTING INDEX IN schema.js file
-
-// the component in flatlist should be having same props as keys of db ojects # DONE
-
-// snippets for schemas.js # DONE, generator function
-// generate root map for working after generating the file
-
 import React, {Component} from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';

@@ -1,10 +1,9 @@
 const utils = {
-	baseURL:'https://0a35506a28de.ngrok.io',
+	baseURL:'https://webrtc-rest-dot-portfolio-apps-311617.uc.r.appspot.com',
+	
+	// baseURL:'https://2838be54472c.ngrok.io',
 	productsEndpoint:'',
 	image:require('./images/samosa.jpg'),
-
-
-	serviceIP: 'https://0a35506a28de.ngrok.io', // dont forget to change
 
 
 	// Create Account Screen

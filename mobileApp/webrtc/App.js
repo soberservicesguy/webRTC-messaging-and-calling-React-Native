@@ -13,68 +13,6 @@ export default function App() {
 	);
 }
 
-// import React, {Component} from 'react';
-// import {Provider} from "react-redux";
-// // IMPORT store
-// import {store} from "./redux_stuff/store_configuration";
-// // IMPORT ConnectedAppContainer
-// import {ConnectedAppNavigation} from "./redux_stuff/connected_components";
-
-// export default class App extends Component {
-// 	constructor(props) {
-// 		super(props);
-// 		this.state = {
-// 			is_internet_connected:false,
-// 		}
-// 	}
-
-
-// 	componentDidUpdate(prevProps, prevState, snapshot){
-// 		// // Typical usage (don't forget to compare states) BUT STATE IS THROUGH props IN REDUX
-// 		// if (this.props.contacts !== prevProps.contacts) {
-// 		// 	show_all_contacts_and_set_in_state()
-// 		// 	console.log("--------LOG--------")
-// 		// 	console.log( this.props.contacts )
-// 		// }
-// 		if ( this.state.is_internet_connected === true &&  prevState.is_internet_connected === false){
-// 			goOnline
-// 		}
-
-// 	}
-
-// 	componentDidMount(){
-// 		this.unsubscribe = NetInfo.addEventListener(state => {
-// 			console.log("Connection type", state.type);
-// 			console.log("Is connected?", state.isConnected);
-// 			// this.props.set_internet_connection( state.isConnected )
-
-// 			this.setState(prev => ({...prev, is_internet_connected: state.isConnected }));
-			
-// 		});
-// 	}
-
-
-// 	componentWillUnmount(){
-// 		this.unsubscribe()
-// 	}
-
-// 	render() {
-// 		return (
-// 			<Provider store={store}>
-// 				<ConnectedAppNavigation />
-// 			</Provider>
-// 		);
-// 	}
-// }
-
-// /**
-//  * Sample React Native App
-//  * https://github.com/facebook/react-native
-//  *
-//  * @format
-//  * @flow strict-local
-//  */
-
 // import React from 'react';
 // import {
 // 	SafeAreaView,
