@@ -67,6 +67,9 @@ refresh_all_dbs()
 
 const app = express()
 const port = 8080
+
+
+
 const httpServer = require("http").createServer(app);
 
 var io = require('socket.io')
@@ -778,4 +781,6 @@ io.on('connection', socket => {
 
 
 
-httpServer.listen(port);
+
+const PORT = process.env.PORT || port;
+httpServer.listen(PORT);
