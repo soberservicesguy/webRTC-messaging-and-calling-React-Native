@@ -180,17 +180,33 @@ var handleMessageAddition = async function(object, new_message){
 
 	}
 
+	console.log('new_message check')
+	console.log(new_message)
+
 	let {senders_details} = new_message
 
 	sort_and_make_chatnodes_proper(object)
 // GETTING OTHER PERSONS NUMBER FROM ROOM_STRING
 	let number_pattern1 = /\d+(?=\-)/
-	let phone_number1 = senders_details.match( number_pattern1 )
+	let phone_number1 = new_message.room_string.match( number_pattern1 )
 
 	let number_pattern2 = /\d+(?=\+)/
-	let phone_number2 = senders_details.match( number_pattern2 )
 
-	let other_persons_number = (phone_number1 === object.props.own_number) ? phone_number2 : phone_number1
+	let phone_number2 = new_message.room_string.match( number_pattern2 )
+	let senders_number = senders_details.room_string.match( number_pattern2 )
+
+	let other_persons_number = phone_number2
+
+	console.log({senders_number:senders_number, other_persons_number:other_persons_number})
+
+	// let other_persons_number = (phone_number1 === object.props.own_number) ? phone_number2 : phone_number1
+	// let other_persons_number = (phone_number1 === new_message.senders_details) ? phone_number2 : phone_number1
+
+	// console.log('other_persons_number')
+	// console.log(other_persons_number)
+
+	// console.log('new_message.senders_details')
+	// console.log(new_message.senders_details)
 
 // MAKE THE OTHER PERSON TO JOIN ROOM WITH YOU
 	object.props.live_socket.emit('bring-someone-to-your-room', {user_phone_number: other_persons_number, room_string: new_message.room_string})
@@ -237,7 +253,7 @@ var handleMessageAddition = async function(object, new_message){
 		console.log('------------------SENDING MESSAGE-------------------------')
 		
 		let socket = object.props.live_socket
-		socket.emit( 'join-room', {room_string: new_message.room_string} )
+		socket.emit( 'join-room', {room_string: new_message.room_string, other_persons_number:other_persons_number} )
 		socket.emit('new-message', {
 			// user_details: user_details, 
 			message: new_message
