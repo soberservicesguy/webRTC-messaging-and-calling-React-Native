@@ -193,7 +193,7 @@ var handleMessageAddition = async function(object, new_message){
 	let number_pattern2 = /\d+(?=\+)/
 
 	let phone_number2 = new_message.room_string.match( number_pattern2 )
-	let senders_number = senders_details.room_string.match( number_pattern2 )
+	let senders_number = new_message.room_string.match( number_pattern2 )
 
 	let other_persons_number = phone_number2
 
