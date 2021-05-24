@@ -1,3 +1,15 @@
+make video call button
+make voice call button
+avatar upload
+add chatnode, only if not added
+load messages from previous chat properly
+
+
+
+
+
+
+
 comes online
 	join all rooms in all nodes to get messages => NODES 											#DONE
 	join other rooms also which I have joined (through someone elses text / call) => REST API		#DONE

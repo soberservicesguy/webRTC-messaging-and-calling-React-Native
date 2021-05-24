@@ -71,7 +71,8 @@ var handleNewSocket = function(object, room_string){
 
 var handleChatnodeAddition = async function(object, new_chatnode){
 
-	my_logger(null, null, 'function_entering', 'handleChatnodeAddition', 0)
+	// WRONG CODE: chatnodes being searched in storage, also the search is improper and comes out [],
+	// also the sort_and_make_chatnodes_proper only considers chatnodes from redux
 
 	try{
 
@@ -81,8 +82,13 @@ var handleChatnodeAddition = async function(object, new_chatnode){
 		// 1 store in chatnode storage
 		let all_keys = await getAllKeys()
 		if ( all_keys.include('chatnodes') ){
-			// let currentDate = new Date().toLocaleDateString("en-US").split("/").join(" | ");
-			// let currentTime = new Date().toLocaleTimeString("en-US").split("/").join(" | ");
+
+			// get this chatnode, if not available only then create new one
+
+			let all_chatnodes = await getStoredObject('chatnodes')
+			console.log('all_chatnodes TO SHOW')
+			console.log(all_chatnodes)
+
 			let unix_time = new Date()
 
 			let number1 = object.props.own_number
@@ -96,35 +102,18 @@ var handleChatnodeAddition = async function(object, new_chatnode){
 		// 2 give chatnode storage to redux for re-render
 			// sorting according to latest chat node addition
 		sort_and_make_chatnodes_proper(object)
-		// let chat_nodes = await getStoredObject('chatnodes')
 
-		// chat_nodes.sort(function sortByUnixTime(a, b){
-		// 	let time1 = a.timestamp;
-		// 	let time2 = b.timestamp;
-		// 	return time1 - time2;
-		// });
 
-		// console.log('====================chat_nodes==================')
-		// console.log(chat_nodes)
-
-		// if ( !chat_nodes.includes(null) && !chat_nodes.includes(undefined)){
-		// 	object.props.set_chatnodes( (chat_nodes == null ? [] : chat_nodes) )
-		// }
-
+	// ONE SOCKET IS ENOUGH, THEREFORE BELOW CODE NOT NEEDED
 		// 3 create sockets out of chat nodes
-		object.props.all_chatnodes.map((chat_node_object) => {
-			let room_string = chat_node_object.room_string
-			eventEmitter.emit('new_entry_in_socket', object, room_string);
-		})
-
-		// my_logger('returned_value', returned_value, 'function_returning', 'handleChatnodeAddition', 0)
-		// return 
+		// object.props.all_chatnodes.map((chat_node_object) => {
+		// 	let room_string = chat_node_object.room_string
+		// 	eventEmitter.emit('new_entry_in_socket', object, room_string);
+		// })
 
 	} catch (err) {
 		console.log(err)
 	}
-
-	my_logger(null, null, 'function_exiting', 'handleChatnodeAddition', 0)
 	
 }
 
@@ -271,66 +260,9 @@ var handleMessageAddition = async function(object, new_message){
 			return 	all_messages
 		})
 
-		// let jsonified_message = JSON.stringify({new_message: new_message, room: new_message.room_string})
-
-		// await AsyncStorage.setItem('offline_messages', jsonified_message)
 	}
 	// CHECK IF THERE IS CHAT NODE FOR IT, IF NOT CREATE IT
 	create_chatnode_if_not_exists(object, new_message)
-		// let chat_nodes = object.props.all_chatnodes.filter(
-		// 	function(item){
-		// 		return item.room_string === new_message.room_string
-		// 	}
-		// )
-
-		// if ( chat_nodes.length === 0  ){
-		// 	let count = 0
-		// 	let last_message = new_message 
-		// 	let unix_time = new Date()
-
-		// 	console.log('------------new_message.senders_details---------------')
-		// 	console.log(new_message.senders_details)
-		// 	console.log(new_message)
-		// 	// let senders_details = String( new_message.senders_details )
-
-		// 	let name_pattern1 = /\d+(?=\-)/
-		// 	let phone_number1 = new_message.room_string.match( name_pattern1 )[0]
-		// 	// console.log( name_pattern.test(new_message.room_string) )
-
-		// 	console.log('-----------------phone_number1 FOUND---------------')
-		// 	console.log(phone_number1)
-
-		// 	let number_pattern2 = /\d+(?=\+)/
-		// 	let phone_number2 = new_message.room_string.match( number_pattern2 )[0]
-
-		// 	console.log('-----------------phone_number2 FOUND---------------')
-		// 	console.log(phone_number2)
-
-		// 	let phone_number = ( phone_number1 === object.props.own_number ) ? phone_number2 : phone_number1
-
-		// 	// console.log('-----------------NUMBER FOUND---------------')
-		// 	// console.log(phone_number)
-
-		// 	// console.log( number_pattern.test(senders_details) )
-
-		// 	let chat_node_proper = {
-		// 		display_name: phone_number, 
-		// 		phone_number: phone_number,
-		// 		room_string: new_message.room_string,				
-
-		// 		timestamp: unix_time, 
-		// 		count:count, 
-		// 		last_message: last_message,
-		// 	}
-
-		// 	console.log('====================chat_node_proper==================')
-		// 	console.log(chat_node_proper)
-
-		// 	if ( chat_node_proper != null && chat_node_proper != undefined){
-		// 		object.props.add_to_chatnodes( chat_node_proper )
-		// 	}
-		// }
-
 
 	// 4 when online, connect to socket and deliver all undelivered messages		
 
@@ -415,7 +347,9 @@ function handle_back_to_online(object){
 
 
 function create_chatnode_if_not_exists(object, new_message){
-// CHECK IF THERE IS CHAT NODE FOR IT, IF NOT CREATE IT		
+	// CHECK IF THERE IS CHAT NODE FOR IT, IF NOT CREATE IT		
+
+	// chat_node being checked in redux only
 	let chat_nodes = object.props.all_chatnodes.filter(
 		function(item){
 			return item.room_string === new_message.room_string
