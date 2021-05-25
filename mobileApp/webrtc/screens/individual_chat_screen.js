@@ -53,29 +53,38 @@ export default class IndividualChatScreen extends Component {
 
 	componentDidMount(){
 
+		console.log('CALLED-------------')
 		
-		my_logger( null, null, 'function_entering', 'componentDidMount' , 0)
-		
-		 // dont forget to try catch wrap entire function
-		
-		
-
-		// console.log(phone_number)
 
 	// COLLECTING OLD MESSAGES AND SHOWING 
-		const { phone_number } = this.props.route.params;
+		let { phone_number } = this.props.route.params;
 
+		// phone_number = phone_number[0]
+
+
+		console.log('phone_number')
+		console.log(phone_number)
+		console.log('this.props.own_number')
+		console.log(this.props.own_number)
 		let room_string = ( Number(phone_number) < Number(this.props.own_number) ) ? `${phone_number}-${this.props.own_number}+` : `${this.props.own_number}-${phone_number}+`
-		// let room_string = `${phone_number}-${this.props.own_number}`
-		// my_logger('this.props.set_current_room_string', {arg_passed:'room_string', arg:room_string}, 'alert', 'componentDidMount', 1)	
-		console.log('current chat room string')
-		console.log(this.props.current_chat_screen_room_string)
+		
+		console.log('room_string')
+		console.log(room_string)
+		this.props.set_current_room_string(room_string)
+		
+
+		console.log('current chat room string 1')
+		console.log({1: this.props.current_chat_screen_room_string})
 
 		this.props.set_current_room_string(room_string)
 
-		console.log('switch chat room string')
-		console.log(this.props.current_chat_screen_room_string)
-		my_logger('this.setMessages', {arg_passed:'room_string', arg:room_string}, 'alert', 'componentDidMount', 1)	
+		console.log('switch chat room string 2')
+		console.log({2: this.props.current_chat_screen_room_string})
+
+		room_string = this.props.current_chat_screen_room_string
+
+		console.log('room_string FInal ')
+		console.log(room_string)
 
 		this.setMessages(room_string)
 
@@ -173,7 +182,6 @@ export default class IndividualChatScreen extends Component {
 				// console.log('ERRRRRR000', err)
 			})
 
-
 			// messages
 			// .then((messages) => {
 			// 	this.setState( prev => ({...prev, messages: messages}) )
@@ -251,10 +259,13 @@ export default class IndividualChatScreen extends Component {
 			message_state:  ( this.props.is_internet_connected ) ? 'sent' : 'offline_sent',
 			sent_time: `${currentTime}_${currentDate}`,
 			senders_details: `${this.props.own_name}-${this.props.own_number}+`,
-			socketID:{local: this.props.socket_id}
+			socketID:{local: this.props.socket_id},
 		}
 		console.log('ENTEREED 3')
 		
+		console.log('message in sendMessage REACT')
+		console.log(message)
+
 		eventEmitter.emit('new_entry_in_message', this, message)
 
 		console.log('ENTEREED 4')

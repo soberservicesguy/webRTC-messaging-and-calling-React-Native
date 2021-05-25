@@ -188,6 +188,8 @@ var handleMessageAddition = async function(object, new_message){
 
 	console.log({senders_number:senders_number, other_persons_number:other_persons_number})
 
+	object.props.set_recipents_number(other_persons_number)
+
 	// let other_persons_number = (phone_number1 === object.props.own_number) ? phone_number2 : phone_number1
 	// let other_persons_number = (phone_number1 === new_message.senders_details) ? phone_number2 : phone_number1
 
@@ -274,7 +276,7 @@ var handleMessageAddition = async function(object, new_message){
 
 
 var handleMessageRecieving = async function(object, new_message){
-	// console.log('-----------------HANDLING RECIEVED MESSAGE-----------------------')
+
 	console.log("===================== NEW MESSAGE IS BELOW =====================")
 	console.log(new_message)
 
@@ -350,6 +352,12 @@ function create_chatnode_if_not_exists(object, new_message){
 	// CHECK IF THERE IS CHAT NODE FOR IT, IF NOT CREATE IT		
 
 	// chat_node being checked in redux only
+	console.log(' ### current all_chatnodes is below ### ')
+	console.log(object.props.all_chatnodes)
+
+	console.log(' ### new_message is below ### ')
+	console.log(new_message)
+
 	let chat_nodes = object.props.all_chatnodes.filter(
 		function(item){
 			return item.room_string === new_message.room_string
@@ -379,14 +387,39 @@ function create_chatnode_if_not_exists(object, new_message){
 		let number_pattern = /\d+(?=\+)/
 		let phone_number = senders_details.match( number_pattern )
 
+
+		let number1_pattern = /\d+(?=\-)/
+		let number1 = new_message.room_string.match( number1_pattern )
+
+		let number2_pattern = /\d+(?=\+)/
+		let number2 = new_message.room_string.match( number2_pattern )
+
+		let number_to_use
+		let name_to_use
+
+		if (phone_number === object.props.own_number){
+			number_to_use = (phone_number === number1) ? number2 : number1
+			name_to_use = ''
+		} else {
+			name_to_use = name
+		}
+
+
+
 		// console.log('-----------------NUMBER FOUND---------------')
 		// console.log(phone_number)
 
 		// console.log( number_pattern.test(senders_details) )
 
+		console.log('____+++++ watch +++++++___________')
+		console.log({phone_number_for_chatnode: phone_number})
+
+
 		let chat_node_proper = {
-			display_name: name,
-			phone_number: phone_number,
+			// display_name: name,
+			display_name: name_to_use,
+			// phone_number: phone_number,
+			phone_number: number_to_use,
 			room_string: new_message.room_string,				
 
 			timestamp: unix_time, 
@@ -434,7 +467,7 @@ async function sort_and_make_chatnodes_proper(object){
 }
 
 //Assign the event handler to an event:
-eventEmitter.on('new_entry_in_chatnodes', handleChatnodeAddition);
+eventEmitter.on('new_entry_in_chatnodes', handleChatnodeAddition); // NEVER USED
 eventEmitter.on('new_entry_in_message', handleMessageAddition);
 eventEmitter.on('new_entry_in_recieved_message', handleMessageRecieving);
 eventEmitter.on('new_entry_in_socket', handleNewSocket);

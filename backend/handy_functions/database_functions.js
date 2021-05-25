@@ -75,6 +75,9 @@ async function create_user_if_not_exists(phone_number){
 }
 
 async function create_room_and_add_users(room_string){
+	console.log('room_string obtained for making matches')
+	console.log(room_string)
+
 	let required_room = {}
 	let room_users = []
 	let numbers = []

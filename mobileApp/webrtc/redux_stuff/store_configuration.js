@@ -26,6 +26,9 @@ export const mapStateToProps = state => {
 		own_name: state.RTC.own_name,
 		own_number: state.RTC.own_number,
 
+		message_recipents_number: state.RTC.recipents_number,
+		message_recipents_name: state.RTC.recipents_name,
+
 		contacts: state.RTC.contacts,
 
 		contactsPermissionsGranted: state.RTC.permissions_granted_for_contacts,
@@ -61,6 +64,12 @@ export const mapStateToProps = state => {
 
 export const mapDispatchToProps = dispatch => {
 	return {
+
+		set_recipents_name: (recipents_name) => dispatch( { type:"SET_RECIPENTS_NAME", recipents_name: recipents_name } ), 
+		set_recipents_number: (recipents_number) => dispatch( { type:"SET_RECIPENTS_NUMBER", recipents_number: recipents_number } ), 
+
+
+
 		set_socket: (socket_object) => dispatch( { type:"SET_SOCKET", socket_object: socket_object } ), 
 		set_own_socket_id: (socket_id) => dispatch( { type:"SET_SOCKET_ID", socket_id: socket_id } ), 
 

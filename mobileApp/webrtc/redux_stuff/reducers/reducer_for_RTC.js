@@ -5,6 +5,10 @@ const initialState = {
 	own_name:'',
 	own_number:0,
 
+	recipents_number:null,
+	recipents_name:null,
+
+
 	contacts:[],
 
 	permissions_granted_for_contacts: false,
@@ -71,15 +75,26 @@ const reducerForRTC = (state = initialState, action) => {
 
 	switch (action.type) {
 
+		case "SET_RECIPENTS_NUMBER":
+			return {...state, recipents_number: action.recipents_number}
+			break;
+
+		case "SET_RECIPENTS_NAME":
+			return {...state, recipents_name: action.recipents_name}
+			break;
+
+
 		case "SET_SOCKET":
 			return {...state, live_socket: action.socket_object}
-		
+			break;
+
 		case "SET_SOCKET_ID":
 			return {...state, socket_id: action.socket_id}
+			break;
 
 		case "ADD_TO_CHATNODES":
 			return {...state, all_chatnodes:[action.chat_node, ...state.all_chatnodes]}
-
+			break;
 
 		case "SET_NETWORK_READING_PERMISSION":
 

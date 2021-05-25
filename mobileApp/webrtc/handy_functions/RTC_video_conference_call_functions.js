@@ -1121,6 +1121,9 @@ send_message = (object, message) => {
 
 	try{
 
+		console.log('message in send_message function')
+		console.log(message)
+
 		// console.log(object.socket)
 		console.log('sendToPeer triggered in send_message')
 		sendToPeer(object, 'new-message', message, {local: object.socket.id})

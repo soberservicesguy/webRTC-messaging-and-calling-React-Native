@@ -212,7 +212,8 @@ export default class ChatNodesScreen extends Component {
 
 			let room_string = ( Number(number1) < Number(number2) ) ? `${number1}-${number2}+` : `${number2}-${number1}+`
 
-	
+			console.log('room_string generated in generateRoomString REACT')
+			console.log(room_string)
 	
 			my_logger(room_string, 'function_returning', 'generateRoomString', 0)
 			return room_string
@@ -295,34 +296,59 @@ export default class ChatNodesScreen extends Component {
 					snapToInterval={100} // set it to height of component
 					data={ this.props.all_chatnodes } // create DATA as list of objects
 					renderItem={
-						({ item }) => (							
-							<TouchableOpacity activeOpacity={0.2} 
-								style={{height:windowHeight * 0.3}}
-								onPress={() => {
-									console.log('change screen called')
-									// this.props.navigation.navigate('IndividualChat', {phone_number: item.phoneNumbers[0].number})
-									this.props.navigation.push(
-										'IndividualChat', 
-										{phone_number: item.phone_number}
-									)
-								}}
-							> 		
-								<View>
-									<Text>
-										{item.display_name}
-									</Text>
-									<Text>
-										{item.phone_number}
-									</Text>
-									<Text>
-										{item.count}
-									</Text>
-									<Text>
-										
-									</Text>
-								</View>
-							</TouchableOpacity>
-						) //   {messageCountAndLastMessageToRelevantChatNode(this, item.room_string).count}
+						({ item }) => {
+							console.log('item')
+							console.log(item)
+							return(							
+								<TouchableOpacity activeOpacity={0.2} 
+									style={{height:windowHeight * 0.3}}
+									onPress={() => {
+										console.log('item.phone_number is below')
+										console.log(item.phone_number)
+										// this.props.navigation.navigate('IndividualChat', {phone_number: item.phoneNumbers[0].number})
+										let number_pattern1 = /\d+(?=\-)/
+										let phone_number1 = item.room_string.match( number_pattern1 )
+										phone_number1 = phone_number1[0]
+
+										let number_pattern2 = /\d+(?=\+)/
+										let phone_number2 = item.room_string.match( number_pattern2 )
+										phone_number2 = phone_number2[0]
+
+										console.log({phone_number1:phone_number1, phone_number2:phone_number2})
+
+										let other_persons_number
+
+										other_persons_number = (this.props.own_number === phone_number1) ? phone_number2 : phone_number1 
+
+										console.log('other_persons_number')
+										console.log(other_persons_number)
+
+										console.log('this.props.own_number')
+										console.log(this.props.own_number)
+
+										this.props.navigation.push(
+											'IndividualChat', 
+											{phone_number: other_persons_number}
+										)
+									}}
+								> 		
+									<View>
+										<Text>
+											{item.display_name}
+										</Text>
+										<Text>
+											{item.phone_number}
+										</Text>
+										<Text>
+											{item.count}
+										</Text>
+										<Text>
+											
+										</Text>
+									</View>
+								</TouchableOpacity>
+							) //   {messageCountAndLastMessageToRelevantChatNode(this, item.room_string).count}
+						}
 					} // {messageCountAndLastMessageToRelevantChatNode(this, item.room_string).last_message}
 					keyExtractor={item => String( Math.floor(Math.random() * 100) )}
 				/>	
