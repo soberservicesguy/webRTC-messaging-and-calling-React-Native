@@ -48,56 +48,104 @@ async function netinfo_permission(object){
 }
 
 
-async function request_multiple_permissions(){
+async function request_multiple_permissions(object){
 
-	my_logger(null, null, 'function_entering', 'request_multiple_permissions', 0)
+		const granted1 = await PermissionsAndroid.request(
+			PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+			{
+				title: 'Contacts Reading',
+				message: 'This app would like to view your contacts.',
+				buttonNeutral: "Ask Me Later",
+				buttonNegative: "Cancel",
+				buttonPositive: "OK"
+			}
+		);
 
-	try{
+		const granted2 = await PermissionsAndroid.request(
+			PermissionsAndroid.PERMISSIONS.WRITE_CONTACTS,
+			{
+				'title': 'Contacts Writing',
+				'message': 'This app would like to create contacts for you.',
+				'buttonNegative': "Cancel",
+				'buttonPositive': 'Please accept bare mortal'
+			}
+		)
 
-				PermissionsAndroid.requestMultiple(
-					[
-						PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-						PermissionsAndroid.PERMISSIONS.WRITE_CONTACTS,
+		if (granted1 === PermissionsAndroid.RESULTS.GRANTED && granted2 === PermissionsAndroid.RESULTS.GRANTED) {
 
-						// PermissionsAndroid.PERMISSIONS.CAMERA, 
-						// PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-						// PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-						// PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-						// PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-						// PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
-					]
-				).then((result) => {
-					// if (
-					// // && result['android.permission.READ_CONTACTS']
-					// // && result['android.permission.READ_EXTERNAL_STORAGE']
-					// // && result['android.permission.WRITE_EXTERNAL_STORAGE'] === 'granted') {
-					// result['android.permission.READ_CONTACTS']
-					// && result['android.permission.WRITE_CONTACTS']
-					// && result['android.permission.ACCESS_NETWORK_STATE'] === 'granted') {
-					// 	this.setState({
-					// 		permissionsGranted: true
-					// 	});
-					// } else if (result['android.permission.READ_CONTACTS']
-					// || result['android.permission.WRITE_CONTACTS']
-					// || result['android.permission.ACCESS_NETWORK_STATE'] === 'never_ask_again') {
-					// // || result['android.permission.ACCESS_FINE_LOCATION']
-					// // || result['android.permission.READ_EXTERNAL_STORAGE']
-					// // || result['android.permission.WRITE_EXTERNAL_STORAGE'] === 'never_ask_again') {
+			object.props.set_permissions_granted_for_contacts(true)
+			console.log("You can use the contacts reading and writing");
 
-					// 	// object.refs.toast.show('Please Go into Settings -> Applications -> APP_NAME -> Permissions and Allow permissions to continue');
-					// }
-				});
-		// my_logger('returned_value', returned_value, 'function_returning', 'request_multiple_permissions', 0)
-		// return 
+		} else {
+			console.log("Contacts Writing permission given");
+		}
 
-	} catch (err) {
+		const granted3 = await PermissionsAndroid.request(
+			PermissionsAndroid.PERMISSIONS.CAMERA,
+			{
+				title: 'Contacts',
+				message: 'This app would like to use Camera.',
+				buttonNeutral: "Ask Me Later",
+				buttonNegative: "Cancel",
+				buttonPositive: "OK"
+			}
+		);
 
-		my_logger('err', err, 'error', 'request_multiple_permissions', 0)
+		const granted4 = await PermissionsAndroid.request(
+			PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+			{
+				title: 'Contacts',
+				message: 'This app would like to view your contacts.',
+				buttonNeutral: "Ask Me Later",
+				buttonNegative: "Cancel",
+				buttonPositive: "OK"
+			}
+		);
+
+		if (granted3 === PermissionsAndroid.RESULTS.GRANTED && granted4 === PermissionsAndroid.RESULTS.GRANTED) {
+
+			console.log("You can use the video calling");
+
+		} else {
+			console.log("Camera and audio recording permission given");
+		}
 
 
-	}
+		// PermissionsAndroid.requestMultiple(
+		// 	[
+		// 		PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+		// 		PermissionsAndroid.PERMISSIONS.WRITE_CONTACTS,
 
-	my_logger(null, null, 'function_exiting', 'request_multiple_permissions', 0)
+		// 		PermissionsAndroid.PERMISSIONS.CAMERA, 
+		// 	    PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+
+		// 		// PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+		// 		// PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+		// 		// PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+		// 		// PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+		// 		// PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+		// 	]
+		// ).then((result) => {
+		// 	// if (
+		// 	// // && result['android.permission.READ_CONTACTS']
+		// 	// // && result['android.permission.READ_EXTERNAL_STORAGE']
+		// 	// // && result['android.permission.WRITE_EXTERNAL_STORAGE'] === 'granted') {
+		// 	// result['android.permission.READ_CONTACTS']
+		// 	// && result['android.permission.WRITE_CONTACTS']
+		// 	// && result['android.permission.ACCESS_NETWORK_STATE'] === 'granted') {
+		// 	// 	this.setState({
+		// 	// 		permissionsGranted: true
+		// 	// 	});
+		// 	// } else if (result['android.permission.READ_CONTACTS']
+		// 	// || result['android.permission.WRITE_CONTACTS']
+		// 	// || result['android.permission.ACCESS_NETWORK_STATE'] === 'never_ask_again') {
+		// 	// // || result['android.permission.ACCESS_FINE_LOCATION']
+		// 	// // || result['android.permission.READ_EXTERNAL_STORAGE']
+		// 	// // || result['android.permission.WRITE_EXTERNAL_STORAGE'] === 'never_ask_again') {
+
+		// 	// 	// object.refs.toast.show('Please Go into Settings -> Applications -> APP_NAME -> Permissions and Allow permissions to continue');
+		// 	// }
+		// });
 	
 }
 

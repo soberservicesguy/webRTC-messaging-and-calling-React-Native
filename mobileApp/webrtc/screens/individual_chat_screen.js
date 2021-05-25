@@ -9,7 +9,7 @@ import {
 	// Button,
 	Text,
 	TouchableOpacity,
-	// TouchableHighlight,
+	TouchableHighlight,
 } from "react-native";
 
 // IMPORT components without store / redux
@@ -36,7 +36,13 @@ import { setObjectValue } from "../handy_functions/asyncstorage_function"
 import { 
 	messageToRelevantChatNodeOnIndividualScreen,
 	generate_proper_room_string,
+	makeVideoCall,
  } from "../handy_functions/RTC_video_conference_call_functions"
+
+import {
+	RTCView, // not used
+} from 'react-native-webrtc';
+
 
 import {eventEmitter} from '../handy_functions/events_management'
 
@@ -60,12 +66,11 @@ export default class IndividualChatScreen extends Component {
 		let { phone_number } = this.props.route.params;
 
 		// phone_number = phone_number[0]
+		// console.log('phone_number')
+		// console.log(phone_number)
+		// console.log('this.props.own_number')
+		// console.log(this.props.own_number)
 
-
-		console.log('phone_number')
-		console.log(phone_number)
-		console.log('this.props.own_number')
-		console.log(this.props.own_number)
 		let room_string = ( Number(phone_number) < Number(this.props.own_number) ) ? `${phone_number}-${this.props.own_number}+` : `${this.props.own_number}-${phone_number}+`
 		
 		console.log('room_string')
@@ -89,9 +94,7 @@ export default class IndividualChatScreen extends Component {
 		this.setMessages(room_string)
 
 	// LISTENING FOR NEW MESSAGES AND SHOWING
-		
-
-		
+	
 		my_logger( null, null, 'function_exiting', 'componentDidMount' , 0)
 				
 		axios.post(utils.baseURL + '/rooms/create-room', {room_string:room_string})
@@ -315,6 +318,33 @@ export default class IndividualChatScreen extends Component {
 					/>
 				</View>
 
+				{
+					this.props.localStream &&
+					<RTCView
+						streamURL={this.props.localStream.toURL()}
+						style={{width:200, height:200}} 
+					/>
+				}
+
+				{
+					this.props.selectedVideo &&
+					<RTCView
+						streamURL={this.props.selectedVideo.toURL()}
+						style={{width:200, height:200}} 
+					/>
+				}
+
+				<TouchableHighlight activeOpacity={0.2} onPress={() => {
+					// console.log('socket id')
+					// console.log(this.props.live_socket.id)
+					makeVideoCall(this, this.props.live_socket.id)
+				}} style={styles.buttonWithoutBG}>
+					<Text style={styles.innerText}>
+						Make Video Call
+					</Text>
+				</TouchableHighlight>
+				
+
 				<View style={styles.textinputContainer}>
 					<TextInput
 						style={styles.textinput}
@@ -348,7 +378,7 @@ export default class IndividualChatScreen extends Component {
 const styles = StyleSheet.create({
 	screenContainer:{
 		width: windowWidth,
-		height: windowHeight * 0.78
+		height: windowHeight * 0.74
 	},
 	textinputContainer:{
 
@@ -399,5 +429,14 @@ const styles = StyleSheet.create({
 		color:'white',
 		textAlign:'center',
 	},
+
+	buttonWithoutBG:{
+		marginTop:5,
+		marginBottom:5,
+	},
+	innerText:{
+	
+	},
+
 
 })

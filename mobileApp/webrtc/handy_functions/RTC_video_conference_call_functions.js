@@ -48,6 +48,8 @@ const { my_logger } = require('./my_custom_logger')
 
 setSelfUserDetails = (user_details) => {
 
+	console.log('setSelfUserDetails TRIGGERED')
+
 	my_logger(null, null, 'function_entering', 'setSelfUserDetails', 0)
 
 	try{
@@ -205,7 +207,6 @@ assign_socket_events = async (socket_object, object) => {
 	socket_object.on('online-peer', socketID => {
 		// debugger
 		console.log('connected peers ...', socketID)
-
 		//# REMOVED THE CALL INITIATING PROCESS
 		// // create and send offer to the peer (data.socketID)
 		// // 1. Create new pc
@@ -268,7 +269,7 @@ assign_socket_events = async (socket_object, object) => {
 		// 		// 	console.log('sendToPeer triggered in line 354')
 
 		// 		// 	sendToPeer(object, 'offer', sdp, {
-		// 		// 		local: object.socket.id,
+		// 		// 		local: object.props.live_socket.id,
 		// 		// 		remote: socketID
 		// 		// 	})
 		// 		// })
@@ -280,8 +281,13 @@ assign_socket_events = async (socket_object, object) => {
 // add_to_peerconnections
 	//# THIS IS USED, WHEN CALL INITIATER SENDS US candidate EMIT THROUGH SERVER 
 	socket_object.on('candidate', (data) => {
+
+		console.log('CANDIDATE RECIEVED')
 		// get remote's peerConnection
 		const pc = object.props.peerConnections.get( data.socketID )
+		if (pc){
+			console.log('FOUND pc OBJECT')
+		}
 
 		if (pc)
 			pc.addIceCandidate(new RTCIceCandidate(data.candidate))
@@ -290,10 +296,14 @@ assign_socket_events = async (socket_object, object) => {
 // THIS BLOCK IS WHERE createAnswer IS DONE WHEN OFFER IS ACHIEVED
 	//# HERE WE ARE USING createPeerConnection ON ANYONE OFFERING US
 	socket_object.on('offer', data => {
+
+		console.log('OFFER RECIEVED')
+
 		createPeerConnection(object, data.socketID, pc => {
 			if (pc) {
 
 				pc.addStream(object.props.localStream)
+				console.log('LOCAL STREAM ADDED')
 
 				// Send Channel
 				const handleSendChannelStatusChange = (event) => {
@@ -343,6 +353,7 @@ assign_socket_events = async (socket_object, object) => {
 	// debugger
 				//# setRemoteDescription IS FOR OTHER PEER FROM WHOM OFFER IS RECEIVED 
 				pc.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(() => {
+					console.log('SETTING REMOTE DESCRIPTION')
 					// 2. Create Answer
 					pc.createAnswer(object.state.sdpConstraints)
 					.then(sdp => {
@@ -351,7 +362,7 @@ assign_socket_events = async (socket_object, object) => {
 						console.log('sendToPeer triggered in line 420')
 
 						sendToPeer(object, 'answer', sdp, {
-							local: object.socket.id,
+							local: object.props.live_socket.id,
 							remote: data.socketID
 						})
 					})
@@ -362,20 +373,21 @@ assign_socket_events = async (socket_object, object) => {
 
 	//# ON answer JUST setRemoteDescription WILL BE MADE, REST WAS DONE PREVIOUSLY
 	socket_object.on('answer', data => {
+		console.log('ANSWER RECIEVED')
 		// get remote's peerConnection
 		// const pc = object.props.peerConnections[ [data.socketID] ]
 		const pc = object.props.peerConnections.get( data.socketID )
 
-		console.log( '-------------data.socketID---------------')
-		console.log ( data.socketID )
+		// console.log( '-------------data.socketID---------------')
+		// console.log ( data.socketID )
 
 
-		console.log( '-------------pc---------------')
-		console.log ( pc )
+		// console.log( '-------------pc---------------')
+		// console.log ( pc )
 
 
-		console.log( '-------------peerconnections in 464---------------')
-		console.log ( object.props.peerConnections )
+		// console.log( '-------------peerconnections in 464---------------')
+		// console.log ( object.props.peerConnections )
 
 		// console.log(data.sdp)
 		pc.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(()=>{})
@@ -394,6 +406,8 @@ assign_socket_events = async (socket_object, object) => {
 //# THIS WILL BE USED UNTIL RTCPeerConnection IS ESTABLISHED
 //# THIS METHOD EMITS EVENT, PAYLOAD TO SERVER, SERVER UTILIZES IT TO SEND TO OTHERS (PEERS)
 sendToPeer = (object, messageType, payload, socketID) => {
+
+	console.log('sendToPeer TRIGGERED')
 
 	my_logger(null, null, 'function_entering', 'sendToPeer', 0)
 
@@ -419,13 +433,15 @@ sendToPeer = (object, messageType, payload, socketID) => {
 //# MAKING SERVER TO TELL PEOPLE (PEERS) ABOUT PEOPLE THAT WHO ARE ONLINE
 whoisOnline = (object) => {
 
+	console.log('whoisOnline TRIGGERED')
+
 	my_logger(null, null, 'function_entering', 'whoisOnline', 0)
 
 	try{
 
 		console.log('sendToPeer triggered in whoisOnline')
 		
-		sendToPeer(object, 'onlinePeers', null, {local: object.socket.id})
+		sendToPeer(object, 'onlinePeers', null, {local: object.props.live_socket.id})
 
 		// my_logger('returned_value', returned_value, 'function_returning', 'whoisOnline', 0)
 		// return 
@@ -442,6 +458,8 @@ whoisOnline = (object) => {
 
 //# GETTING STREAM FROM LOCAL REQUIRED CAMERA
 getLocalStream = (object) => {
+
+	console.log('getLocalStream TRIGGERED')
 
 	my_logger(null, null, 'function_entering', 'getLocalStream', 0)
 
@@ -504,6 +522,8 @@ getLocalStream = (object) => {
 
 getLocalVoiceStream = (object) => {
 
+	console.log('getLocalVoiceStream TRIGGERED')
+
 	my_logger(null, null, 'function_entering', 'getLocalVoiceStream', 0)
 
 	try{
@@ -564,6 +584,8 @@ getLocalVoiceStream = (object) => {
 //# CAN NAME IT createRTCPeerConnection
 createPeerConnection = (object, socketID, callback) => {
 
+	console.log('createPeerConnection TRIGGERED')
+
 	my_logger(null, null, 'function_entering', 'createPeerConnection', 0)
 
 	try{
@@ -590,12 +612,15 @@ createPeerConnection = (object, socketID, callback) => {
 		//# THIS IS TRIGGERED WHEN WE ARE INTERESTED IN BEING CONNECTED (WE BECOME ICE CANDIDATE)
 		//# HERE THE SERVER WILL SEND candidate EVENT AND PAYLOAD TO PERSON WITH socketID 
 		pc.onicecandidate = (e) => {
+			console.log('onicecandidate Triggered')
+
 			if (e.candidate) {
-			
+
+				console.log('SENDING CANDIDATE TO PEER')			
 				// console.log('sendToPeer triggered in onicecandidate')
 				//# THIS WILL BE ONLY SENT TO PARTICULAR PERSON (PEER)
 				sendToPeer(object, 'candidate', e.candidate, {
-					local: object.socket.id,
+					local: object.props.live_socket.id,
 					remote: socketID
 				})
 			}
@@ -610,11 +635,14 @@ createPeerConnection = (object, socketID, callback) => {
 			//     remoteStream: remoteStreams.length > 0 && remoteStreams[0].stream || null,
 			//   })
 			// }
+			console.log(`oniceconnectionstatechange STTAUS CHANGE ${e}`)
 		}
 
 		//# WILL BE TRIGGERED IF PEER ADDS STREAM
 		pc.onaddstream = (e) => {
 			// debugger
+
+			console.log('TRIGGERED ON ADDSTREAM')
 
 			let _remoteStream = null
 			let remoteStreams = object.props.remoteStreams
@@ -635,17 +663,24 @@ createPeerConnection = (object, socketID, callback) => {
 
 			// 1. check if stream already exists in remoteStreams
 			// const rVideos = object.state.remoteStreams.filter(stream => stream.id === socketID)
+			if (e.stream){
+				console.log('REMOTE STREAM IS BEING OBTAINED')
+			}
 
 			remoteVideo = {
 				id: socketID,
 				name: socketID,
 				stream: e.stream,
 			}
+
+			console.log('remoteVideo')
+			console.log(remoteVideo)
 			// reduxidied
 			// remoteStreams = [...object.state.remoteStreams, remoteVideo] // state
 			// object.props.add_to_remotestreams( remoteVideo )
 			try {
 				object.props.add_to_remotestreams( remoteVideo )
+				console.log('ADDED VIDEO TO REMOTE STREAMS')
 			}
 			catch(err) {
 				console.log('COULDNT add_to_remotestreams')
@@ -718,6 +753,11 @@ createPeerConnection = (object, socketID, callback) => {
 			// 	}
 			// })
 
+
+			if (remoteVideo){
+				console.log('remoteVideo IS AVAILABLE')
+			}
+
 			( object.props.remoteStreams.length > 0 ) ? object.props.set_remotestream( e.stream ) : object.props.set_remotestream( {} ) 
 			object.props.set_selectedvideo( remoteVideo )
 			let selectedVideo = object.props.remoteStreams.filter(stream => stream.id === object.props.selectedVideo.id)
@@ -733,6 +773,41 @@ createPeerConnection = (object, socketID, callback) => {
 			// alert('GONE')
 		}
 
+// {
+// 	"_dataChannelIds": Set {1}, 
+// 	"_localStreams": [{"_reactTag": "e59791c3-46aa-43bd-808b-e6f7e87f4166", "_tracks": [Array], "active": true, "id": "e59791c3-46aa-43bd-808b-e6f7e87f4166"}], 
+// 	"_peerConnectionId": 3, 
+// 	"_remoteStreams": [], 
+// 	"_subscriptions": [{
+// 		"context": undefined, 
+// 		"emitter": [RCTDeviceEventEmitter], 
+// 		"eventType": "peerConnectionOnRenegotiationNeeded", "key": 3, 
+// 		"listener": [Function anonymous], 
+// 		"subscriber": [EventSubscriptionVendor]},
+// 		 {"context": undefined, 
+// 		 "emitter": [RCTDeviceEventEmitter], 
+// 		 "eventType": "peerConnectionIceConnectionChanged", "key": 3, 
+// 		 "listener": [Function anonymous], "subscriber": [EventSubscriptionVendor]}, 
+// 		 {"context": undefined, "emitter": [RCTDeviceEventEmitter], 
+// 		 "eventType": "peerConnectionSignalingStateChanged", "key": 3, "listener": [Function anonymous], "subscriber": [EventSubscriptionVendor]}, 
+// 		 {"context": undefined, "emitter": [RCTDeviceEventEmitter], 
+// 		 "eventType": "peerConnectionAddedStream", "key": 3, "listener": [Function anonymous], "subscriber": [EventSubscriptionVendor]}, 
+// 		 {"context": undefined, "emitter": [RCTDeviceEventEmitter], 
+// 		 "eventType": "peerConnectionRemovedStream", "key": 3, "listener": [Function anonymous], "subscriber": [EventSubscriptionVendor]}, 
+// 		 {"context": undefined, "emitter": [RCTDeviceEventEmitter], 
+// 		 "eventType": "mediaStreamTrackMuteChanged", "key": 3, "listener": [Function anonymous], "subscriber": [EventSubscriptionVendor]}, 
+// 		 {"context": undefined, "emitter": [RCTDeviceEventEmitter], 
+// 		 "eventType": "peerConnectionGotICECandidate", "key": 3, "listener": [Function anonymous], "subscriber": [EventSubscriptionVendor]}, 
+// 		 {"context": undefined, "emitter": [RCTDeviceEventEmitter], 
+// 		 "eventType": "peerConnectionIceGatheringChanged", "key": 3, "listener": [Function anonymous], "subscriber": [EventSubscriptionVendor]}, 
+// 		 {"context": undefined, "emitter": [RCTDeviceEventEmitter], 
+// 		 "eventType": "peerConnectionDidOpenDataChannel", "key": 3, "listener": [Function anonymous], "subscriber": [EventSubscriptionVendor]
+// 	}], 
+// 	"close": [Function anonymous], 
+// 		 "iceConnectionState": "new", "iceGatheringState": "new", "signalingState": "stable"
+// }
+
+
 		if (object.props.localStream) {
 			pc.addStream(object.props.localStream)
 
@@ -742,11 +817,12 @@ createPeerConnection = (object, socketID, callback) => {
 		}
 		// return pc
 		callback(pc)
-		
 
+		if (pc){
+			console.log('pc CREATED')
+			console.log(pc)
+		}
 
-		// my_logger('returned_value', returned_value, 'function_returning', 'createPeerConnection', 0)
-		// return 
 
 	} catch (err) {
 
@@ -771,7 +847,7 @@ createPeerConnection = (object, socketID, callback) => {
 // 			console.log('sendToPeer triggered in line 354')
 
 // 			sendToPeer(object, 'offer', sdp, {
-// 				local: object.socket.id,
+// 				local: object.props.live_socket.id,
 // 				remote: socket_ID
 // 			})
 // 		})
@@ -948,7 +1024,7 @@ createPeerConnection = (object, socketID, callback) => {
 // 				// 	console.log('sendToPeer triggered in line 354')
 
 // 				// 	sendToPeer(object, 'offer', sdp, {
-// 				// 		local: object.socket.id,
+// 				// 		local: object.props.live_socket.id,
 // 				// 		remote: socketID
 // 				// 	})
 // 				// })
@@ -1021,7 +1097,7 @@ createPeerConnection = (object, socketID, callback) => {
 // 						console.log('sendToPeer triggered in line 420')
 
 // 						sendToPeer(object, 'answer', sdp, {
-// 							local: object.socket.id,
+// 							local: object.props.live_socket.id,
 // 							remote: data.socketID
 // 						})
 // 					})
@@ -1062,8 +1138,11 @@ createPeerConnection = (object, socketID, callback) => {
 // 	})
 // }
 
+
 //# FUNCTION THAT SWITCHES VIDEO TO SELECTED ONE
 switchVideo = (object, video) => {
+
+	console.log('switchVideo TRIGGERED')
 
 	my_logger(null, null, 'function_entering', 'switchVideo', 0)
 
@@ -1093,6 +1172,8 @@ switchVideo = (object, video) => {
 
 stopTracks = (stream) => {
 
+	console.log('stopTracks TRIGGERED')
+
 	my_logger(null, null, 'function_entering', 'stopTracks', 0)
 
 	try{
@@ -1117,16 +1198,16 @@ stopTracks = (stream) => {
 //# FUNCTION CREATED, BUT NOT USED
 send_message = (object, message) => {
 
+	console.log('send_message TRIGGERED')
+
 	my_logger(null, null, 'function_entering', 'send_message', 0)
 
 	try{
 
-		console.log('message in send_message function')
-		console.log(message)
-
-		// console.log(object.socket)
-		console.log('sendToPeer triggered in send_message')
-		sendToPeer(object, 'new-message', message, {local: object.socket.id})
+		// console.log('message in send_message function')
+		// console.log(message)
+		// console.log('sendToPeer triggered in send_message')
+		sendToPeer(object, 'new-message', message, {local: object.props.live_socket.id})
 
 		// my_logger('returned_value', returned_value, 'function_returning', 'send_message', 0)
 		// return 
@@ -1209,6 +1290,9 @@ send_message = (object, message) => {
 
 
 makePhoneCall = (object, socketID) => {
+
+	console.log('makePhoneCall TRIGGERED')
+
 	// create and send offer to the peer (data.socketID)
 	// 1. Create new pc
 	createPeerConnection(object, socketID, pc => {
@@ -1268,10 +1352,10 @@ makePhoneCall = (object, socketID) => {
 			.then(sdp => {
 				pc.setLocalDescription(sdp)
 
-				console.log('sendToPeer triggered in line 354')
+				console.log('sendToPeer triggered in createOffer')
 
 				sendToPeer(object, 'offer', sdp, {
-					local: object.socket.id,
+					local: object.props.live_socket.id,
 					remote: socketID
 				})
 			})
@@ -1282,13 +1366,15 @@ makePhoneCall = (object, socketID) => {
 
 
 makeVideoCall = (object, socketID) => {
+
+	console.log('makeVideoCall TRIGGERED')
 	// create and send offer to the peer (data.socketID)
 	// 1. Create new pc
 	createPeerConnection(object, socketID, pc => {
 		// 2. Create Offer
 		if (pc) {
 			
-			getLocalStream() // SHIFTED FROM connection-success event, commented out there
+			getLocalStream(object) // SHIFTED FROM connection-success event, commented out there
 
 			// Send Channel
 			const handleSendChannelStatusChange = (event) => {
@@ -1298,7 +1384,6 @@ makeVideoCall = (object, socketID) => {
 			const sendChannel = pc.createDataChannel('sendChannel')
 			sendChannel.onopen = handleSendChannelStatusChange
 			sendChannel.onclose = handleSendChannelStatusChange
-
 			// reduxified		
 			// object.setState(prevState => { // state
 			// 	return {
@@ -1306,6 +1391,9 @@ makeVideoCall = (object, socketID) => {
 			// 	}
 			// })
 			object.props.add_to_sendchannels( sendChannel )
+
+			console.log('sendChannel is below')
+			console.log(sendChannel)
 
 			// Receive Channels
 			const handleReceiveMessage = (event) => {
@@ -1341,14 +1429,19 @@ makeVideoCall = (object, socketID) => {
 			.then(sdp => {
 				pc.setLocalDescription(sdp)
 
-				console.log('sendToPeer triggered in line 354')
+				console.log('sendToPeer triggered in createOffer')
 
 				sendToPeer(object, 'offer', sdp, {
-					local: object.socket.id,
+					local: object.props.live_socket.id,
 					remote: socketID
 				})
+
+				console.log('OFFER SENT USING sendToPeer')
 			})
 		}
+	
+		console.log('object.props.remoteStream')
+		console.log(object.props.remoteStream)
 	})
 
 }
@@ -1356,6 +1449,8 @@ makeVideoCall = (object, socketID) => {
 // socket.emit( 'join-room', {room_string: new_message.room_string} )
 
 goOnline = async (object) => {
+
+	console.log('goOnline TRIGGERED')
 
 	// my_logger(null, null, 'function_entering', 'goOnline', 0)
 
@@ -1436,8 +1531,8 @@ goOnline = async (object) => {
 			}
 	})
 	.then((response) => {
-		console.log('---------------------response.data-------------------');
-		console.log(response.data);
+		// console.log('---------------------response.data-------------------');
+		// console.log(response.data);
 
 		let all_rooms_of_user = response.data
 
@@ -1465,9 +1560,6 @@ goOnline = async (object) => {
 				}
 			}
 		)
-
-		// console.log('object.socket')
-		// console.log(object.socket)
 
 		console.log('SETTING SOCKET IN REDUX')
 		object.props.set_socket( object.socket )
@@ -1527,6 +1619,8 @@ goOnline = async (object) => {
 
 goOffline = (object) => {	
 
+	console.log('goOffline TRIGGERED')
+
 	my_logger(null, null, 'function_entering', 'goOffline', 0)
 
 	try{
@@ -1536,9 +1630,6 @@ goOffline = (object) => {
 			_socket.close()
 		})	
 		
-		// my_logger('returned_value', returned_value, 'function_returning', 'goOffline', 0)
-		// return 
-
 	} catch (err) {
 
 		my_logger('err', err, 'error', 'goOffline', 0)
@@ -1552,6 +1643,8 @@ goOffline = (object) => {
 
 
 addSomeoneToRoom = (object, user_phone_number, room) => {
+
+	console.log('addSomeoneToRoom TRIGGERED')
 
 	my_logger(null, null, 'function_entering', 'addSomeoneToRoom', 0)
 
@@ -1570,8 +1663,6 @@ addSomeoneToRoom = (object, user_phone_number, room) => {
 		});
 		// socket.close()
 		
-		// my_logger('returned_value', returned_value, 'function_returning', 'addSomeoneToRoom', 0)
-		// return 
 
 	} catch (err) {
 
@@ -1586,6 +1677,8 @@ addSomeoneToRoom = (object, user_phone_number, room) => {
 
 
 leaveRoom = (object, room) => {
+
+	console.log('leaveRoom TRIGGERED')
 
 	my_logger(null, null, 'function_entering', 'leaveRoom', 0)
 
@@ -1606,10 +1699,7 @@ leaveRoom = (object, room) => {
 				my_logger( 'error', error, 'error', 'leaveRoom' , 0)
 				// console.log(error);
 		});
-		// socket.close()
 		
-		// my_logger('returned_value', returned_value, 'function_returning', 'leaveRoom', 0)
-		// return 
 
 	} catch (err) {
 
@@ -1623,6 +1713,8 @@ leaveRoom = (object, room) => {
 
 
 removeFromRoom = (object, users_number, room) => {
+
+	console.log('removeFromRoom TRIGGERED')
 
 	my_logger(null, null, 'function_entering', 'removeFromRoom', 0)
 
@@ -1645,8 +1737,6 @@ removeFromRoom = (object, users_number, room) => {
 				// console.log(error);
 		});	
 		
-		// my_logger('returned_value', returned_value, 'function_returning', 'removeFromRoom', 0)
-		// return 
 
 	} catch (err) {
 
@@ -1661,6 +1751,8 @@ removeFromRoom = (object, users_number, room) => {
 
 
 blockUser = (object, users_number, room) => {
+
+	console.log('blockUser TRIGGERED')
 
 	my_logger(null, null, 'function_entering', 'blockUser', 0)
 
@@ -1680,8 +1772,6 @@ blockUser = (object, users_number, room) => {
 				console.log(error);
 		});
 		
-		// my_logger('returned_value', returned_value, 'function_returning', 'blockUser', 0)
-		// return 
 
 	} catch (err) {
 
@@ -1711,6 +1801,8 @@ function generate_proper_room_string(room_string){
 // will be triggered when new message comes, then fed to current_chat_screen_room_string
 messageToRelevantChatNodeOnIndividualScreen = async (room_string, object) => {
 
+	console.log('messageToRelevantChatNodeOnIndividualScreen TRIGGERED')
+
 	my_logger(null, null, 'function_entering', 'messageToRelevantChatNodeOnIndividualScreen', 0)
 
 	try{
@@ -1719,79 +1811,24 @@ messageToRelevantChatNodeOnIndividualScreen = async (room_string, object) => {
 
 		my_logger( 'room_string', room_string, 'value', 'messageToRelevantChatNodeOnIndividualScreen' , 0)
 		
-		 // dont forget to try catch wrap entire function
 		
 		room_string = generate_proper_room_string(room_string)
-		// let number1_pattern = /\d+(?=\-)/
-		// let number1 = room_string.match( number1_pattern )
-
-		// let number2_pattern = /\d+(?=\+)/
-		// let number2 = room_string.match( number2_pattern )
-
-		// room_string = ( Number(number1) < Number(number2) ) ? `${number1}-${number2}+` : `${number2}-${number1}+`
-
-		// positive look behind doesnt work in all browsers
-		// let number2_pattern = /(?<=\-)\d+/
-		// let number2 = room_string.match( number2_pattern )
-	// /(?<=\$)\d+/	matches 30 in "1 turkey costs $30"
-		// var room_string1 = `${number1}-${number2}`
-		// var room_string2 = `${number2}-${number1}`
-
-		// commenting out room_string1 and room_string2 
-		// var room_string1 = `${number1}-${object.props.own_number}`
-		// var room_string2 = `${object.props.own_number}-${number1}`
-
-		// 1 get all messages from asyncstorage
-		// let all_messages = getStoredObject('stored_messages')
-		// let all_messages = await getStoredObject('stored_messages')
-	// 2 filter on room_string and find node's room_string
-		// console.log(all_messages)
-
-		// all_messages = all_messages.filter(
-		// 	function(item){
-		// 		return item.room_string === room_string1
-		// 	}
-		// )
-
-		// all_messages.sort(function sortByUnixTime(a, b){
-		// 	let time1 = a.sent_time;
-		// 	let time2 = b.sent_time;
-		// 	return time1 - time2;
-		// });
-
-		// // 3 filter last 20 messages from it
-		// all_messages = all_messages.slice(-20)
-		// // 4 add last 20 messages to data for node
-		// return all_messages
 
 		return AsyncStorage.getItem('stored_messages')
 		.then((all_messages) => {
-			// all_messages = all_messages != null ? JSON.parse(jsonValue) : null
+
 			my_logger( 'all_messages', all_messages, 'value', 'messageToRelevantChatNodeOnIndividualScreen' , 0)
-			// console.log('MESSAGES ARE BELOW')
-			// console.log(all_messages)
 			my_logger( 'all_messages.length', all_messages.length, 'value', 'messageToRelevantChatNodeOnIndividualScreen' , 0)
-			// console.log('MESSAGES LENGTH IS')
-			// console.log(all_messages.length)
-
-
 
 			if ( all_messages.length > 2 ){ // kept 2 because it showed length as 2
 
 				my_logger( 'typeof(all_messages)', typeof(all_messages), 'value', 'messageToRelevantChatNodeOnIndividualScreen' , 0)
-				// console.log( typeof(all_messages) )
 
 				all_messages = JSON.parse( all_messages )
 
 				my_logger( 'typeof(all_messages)', typeof(all_messages), 'value', 'messageToRelevantChatNodeOnIndividualScreen' , 0)
-				// console.log('all_messages TYPE IS BELOW')
-				// console.log( typeof(all_messages) )
-
 				my_logger( 'all_messages', all_messages, 'value', 'messageToRelevantChatNodeOnIndividualScreen' , 0)
-				// console.log(all_messages)
-				
-				// for loop
-				// console.log('ROOM STRINGS OF all_messages ARE BELOW')
+
 				for (let i = 0; i < all_messages.length; i++) {
 					console.log( all_messages[i].room_string )
 				} 
@@ -1836,8 +1873,6 @@ messageToRelevantChatNodeOnIndividualScreen = async (room_string, object) => {
 		.catch((error) => {
 
 			my_logger( 'error', error, 'error', 'messageToRelevantChatNodeOnIndividualScreen' , 0)
-			
-			// console.log('ERRRRRR1', error)
 
 		})
 
@@ -1884,6 +1919,8 @@ messageToRelevantChatNodeOnIndividualScreen = async (room_string, object) => {
 // will be used in componentDidMount of all_chat_nodes screen
 messageCountAndLastMessageToRelevantChatNode = async (object, room_string) => {
 
+	console.log('messageCountAndLastMessageToRelevantChatNode TRIGGERED')
+
 	// 1 get all messages from asyncstorage
 	let all_messages = await getStoredObject('stored_messages')
 	// 2 filter on room_string and find node's room_string
@@ -1909,8 +1946,8 @@ messageCountAndLastMessageToRelevantChatNode = async (object, room_string) => {
 	.then((all_messages) => {
 		// console.log('MESSAGES ARE BELOW')
 		// console.log(all_messages)
-		console.log('===================all_messages====================')
-		console.log(all_messages)
+		// console.log('===================all_messages====================')
+		// console.log(all_messages)
 
 		// since its saying all_messages.filter is not a function
 		all_messages = [...all_messages]
@@ -1949,32 +1986,8 @@ messageCountAndLastMessageToRelevantChatNode = async (object, room_string) => {
 	})
 
 
-	// return all_messages
-	// .then((all_messages) => {
-	// 	all_messages = all_messages.filter(
-	// 		function(item){
-	// 			return item.room_string === room_string
-	// 		}
-	// 	)
-	// 	// 3 filter to unseen messages on it and just get the count
-	// 	all_messages = all_messages.filter(
-	// 		function(item){
-	// 			return item.message_state === 'new'
-	// 		}
-	// 	)
-
-	// 	let new_messages_count = all_messages.length
-	// 	// 4 add last message to data for node
-	// 	let last_message = all_messages.slice(-1)
-
-	// 	return {count:new_messages_count, last_message:last_message}
-	// })
-	// .catch((err) => console.log('ERRRRRR2', err))
-	// // 5 add to state and re render
 	
 }
-	// assgign data as below
-	// data = object.props.all_chatnodes
 
 module.exports = { 
 	setSelfUserDetails,

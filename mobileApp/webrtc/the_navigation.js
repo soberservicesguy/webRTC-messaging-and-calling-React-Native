@@ -166,7 +166,7 @@ class AppNavigation extends Component {
 	}
 
 	componentDidMount(){
-		// request_multiple_permissions()
+		request_multiple_permissions(this)
 
 		this.unsubscribe = NetInfo.addEventListener(state => {
 			this.props.set_internet_connection( state.isConnected )
