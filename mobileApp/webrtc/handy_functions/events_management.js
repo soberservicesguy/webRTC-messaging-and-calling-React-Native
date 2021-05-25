@@ -186,6 +186,15 @@ var handleMessageAddition = async function(object, new_message){
 
 	let other_persons_number = phone_number2
 
+	if (Array.isArray(other_persons_number)){
+		other_persons_number = other_persons_number[0]
+	}
+
+	if (Array.isArray(senders_number)){
+		senders_number = senders_number[0]
+	}
+
+
 	console.log({senders_number:senders_number, other_persons_number:other_persons_number})
 
 	object.props.set_recipents_number(other_persons_number)

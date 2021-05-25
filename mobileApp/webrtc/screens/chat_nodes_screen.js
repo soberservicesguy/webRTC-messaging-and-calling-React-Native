@@ -303,6 +303,9 @@ export default class ChatNodesScreen extends Component {
 								<TouchableOpacity activeOpacity={0.2} 
 									style={{height:windowHeight * 0.3}}
 									onPress={() => {
+
+										this.props.set_current_room_string(item.room_string)
+										
 										console.log('item.phone_number is below')
 										console.log(item.phone_number)
 										// this.props.navigation.navigate('IndividualChat', {phone_number: item.phoneNumbers[0].number})
@@ -325,6 +328,7 @@ export default class ChatNodesScreen extends Component {
 
 										console.log('this.props.own_number')
 										console.log(this.props.own_number)
+
 
 										this.props.navigation.push(
 											'IndividualChat', 
