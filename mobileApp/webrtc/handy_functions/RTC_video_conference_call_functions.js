@@ -207,75 +207,7 @@ assign_socket_events = async (socket_object, object) => {
 	socket_object.on('online-peer', socketID => {
 		// debugger
 		console.log('connected peers ...', socketID)
-		//# REMOVED THE CALL INITIATING PROCESS
-		// // create and send offer to the peer (data.socketID)
-		// // 1. Create new pc
-		// createPeerConnection(object, socketID, pc => {
-		// 	// 2. Create Offer
-		// 	if (pc) {
-				
-		// 		object.getLocalStream() // SHIFTED FROM connection-success event, commented out there
 
-		// 		// Send Channel
-		// 		const handleSendChannelStatusChange = (event) => {
-		// 			console.log('send channel status: ' + object.props.sendChannels[0].readyState)
-		// 		}
-
-		// 		const sendChannel = pc.createDataChannel('sendChannel')
-		// 		sendChannel.onopen = handleSendChannelStatusChange
-		// 		sendChannel.onclose = handleSendChannelStatusChange
-
-		// 		// reduxified		
-		// 		// object.setState(prevState => { // state
-		// 		// 	return {
-		// 		// 		sendChannels: [...prevState.sendChannels, sendChannel]
-		// 		// 	}
-		// 		// })
-		// 		object.props.add_to_sendchannels( sendChannel )
-
-		// 		// Receive Channels
-		// 		const handleReceiveMessage = (event) => {
-		// 			const message = JSON.parse(event.data)
-		// 			console.log(message)
-		// 			// reduxified
-		// 			// object.setState(prevState => { // state
-		// 			// 	return {
-		// 			// 		messages: [...prevState.messages, message]
-		// 			// 	}
-		// 			// })
-		// 			object.props.add_to_messages( message )
-		// 		}
-
-		// 		const handleReceiveChannelStatusChange = (event) => {
-		// 			if (object.receiveChannel) {
-		// 				console.log("receive channel's status has changed to " + object.receiveChannel.readyState);
-		// 			}
-		// 		}
-
-		// 		const receiveChannelCallback = (event) => {
-		// 			const receiveChannel = event.channel
-		// 			receiveChannel.onmessage = handleReceiveMessage
-		// 			receiveChannel.onopen = handleReceiveChannelStatusChange
-		// 			receiveChannel.onclose = handleReceiveChannelStatusChange
-		// 		}
-
-		// 		pc.ondatachannel = receiveChannelCallback
-
-		// 		// CREATED A FUNCTION FOR BELOW AND WILL BE USED WHEN NEEDED
-		// 		// pc.createOffer(object.state.sdpConstraints)
-		// 		// .then(sdp => {
-		// 		// 	pc.setLocalDescription(sdp)
-
-		// 		// 	console.log('sendToPeer triggered in line 354')
-
-		// 		// 	sendToPeer(object, 'offer', sdp, {
-		// 		// 		local: object.props.live_socket.id,
-		// 		// 		remote: socketID
-		// 		// 	})
-		// 		// })
-		// 		// create_offer_through_pc(object.state.sdpConstraints, socketID)
-		// 	}
-		// })
 	})
 
 // add_to_peerconnections
@@ -289,8 +221,17 @@ assign_socket_events = async (socket_object, object) => {
 			console.log('FOUND pc OBJECT')
 		}
 
-		if (pc)
-			pc.addIceCandidate(new RTCIceCandidate(data.candidate))
+		if (pc){
+			try{
+				console.log('data.candidate')
+				console.log(data.candidate)
+				console.log(`TRYING TO ADD ICE CANDIDATE WITH ${data.candidate}`)
+				pc.addIceCandidate(new RTCIceCandidate(data.candidate))
+			} catch (err){
+				console.log('BELOW ERROR OCCURED WHILE ADDING ICE CANDIDATAE')
+				console.log(err)
+			}
+		}
 	})
 
 // THIS BLOCK IS WHERE createAnswer IS DONE WHEN OFFER IS ACHIEVED
@@ -299,7 +240,7 @@ assign_socket_events = async (socket_object, object) => {
 
 		console.log('OFFER RECIEVED')
 
-		createPeerConnection(object, data.socketID, pc => {
+		createPeerConnection(object, room_string, data.socketID, pc => {
 			if (pc) {
 
 				pc.addStream(object.props.localStream)
@@ -361,10 +302,16 @@ assign_socket_events = async (socket_object, object) => {
 
 						console.log('sendToPeer triggered in line 420')
 
-						sendToPeer(object, 'answer', sdp, {
-							local: object.props.live_socket.id,
-							remote: data.socketID
-						})
+						sendToPeer(object, 'answer', 
+							{
+								sdp: sdp,
+								local: object.props.live_socket.id,
+								remote: data.socketID,
+								room: room_string,
+							},
+							object.props.live_socket.id,
+						)
+
 					})
 				})
 			}
@@ -442,7 +389,7 @@ sendToPeer = (object, messageType, payload, socketID) => {
 
 //# SOCKET.IO METHOD
 //# MAKING SERVER TO TELL PEOPLE (PEERS) ABOUT PEOPLE THAT WHO ARE ONLINE
-whoisOnline = (object) => {
+whoisOnline = (object, room_string) => {
 
 	console.log('whoisOnline TRIGGERED')
 
@@ -452,7 +399,7 @@ whoisOnline = (object) => {
 
 		console.log('sendToPeer triggered in whoisOnline')
 		
-		sendToPeer(object, 'onlinePeers', null, {local: object.props.live_socket.id})
+		sendToPeer(object, 'onlinePeers', null, {local: object.props.live_socket.id, room:room_string})
 
 		// my_logger('returned_value', returned_value, 'function_returning', 'whoisOnline', 0)
 		// return 
@@ -468,7 +415,7 @@ whoisOnline = (object) => {
 }
 
 //# GETTING STREAM FROM LOCAL REQUIRED CAMERA
-getLocalStream = (object) => {
+getLocalStream = (object, room_string) => {
 
 	console.log('getLocalStream TRIGGERED')
 
@@ -484,7 +431,7 @@ getLocalStream = (object) => {
 			// })
 			object.props.set_localstream( stream )
 
-			whoisOnline(object)
+			whoisOnline(object, room_string)
 		}
 
 		const failure = (e) => {
@@ -547,7 +494,7 @@ getLocalVoiceStream = (object) => {
 			// })
 			object.props.set_localstream( stream )
 
-			whoisOnline(object)
+			whoisOnline(object, room_string)
 		}
 
 		const failure = (e) => {
@@ -593,7 +540,7 @@ getLocalVoiceStream = (object) => {
 //# socketID IS OF PERSON WE WANT TO CONNECT TO
 //# THIS METHOD IS LETTING US CONNECT TO PERSON DIRECTLY
 //# CAN NAME IT createRTCPeerConnection
-createPeerConnection = (object, socketID, callback) => {
+createPeerConnection = (object, room_string, socketID, callback) => {
 
 	console.log('createPeerConnection TRIGGERED')
 
@@ -632,8 +579,10 @@ createPeerConnection = (object, socketID, callback) => {
 				//# THIS WILL BE ONLY SENT TO PARTICULAR PERSON (PEER)
 				sendToPeer(object, 'candidate', e.candidate, {
 					local: object.props.live_socket.id,
-					remote: socketID
+					remote: socketID,
+					room: room_string,
 				})
+
 			}
 		}
 
@@ -784,41 +733,6 @@ createPeerConnection = (object, socketID, callback) => {
 			// alert('GONE')
 		}
 
-// {
-// 	"_dataChannelIds": Set {1}, 
-// 	"_localStreams": [{"_reactTag": "e59791c3-46aa-43bd-808b-e6f7e87f4166", "_tracks": [Array], "active": true, "id": "e59791c3-46aa-43bd-808b-e6f7e87f4166"}], 
-// 	"_peerConnectionId": 3, 
-// 	"_remoteStreams": [], 
-// 	"_subscriptions": [{
-// 		"context": undefined, 
-// 		"emitter": [RCTDeviceEventEmitter], 
-// 		"eventType": "peerConnectionOnRenegotiationNeeded", "key": 3, 
-// 		"listener": [Function anonymous], 
-// 		"subscriber": [EventSubscriptionVendor]},
-// 		 {"context": undefined, 
-// 		 "emitter": [RCTDeviceEventEmitter], 
-// 		 "eventType": "peerConnectionIceConnectionChanged", "key": 3, 
-// 		 "listener": [Function anonymous], "subscriber": [EventSubscriptionVendor]}, 
-// 		 {"context": undefined, "emitter": [RCTDeviceEventEmitter], 
-// 		 "eventType": "peerConnectionSignalingStateChanged", "key": 3, "listener": [Function anonymous], "subscriber": [EventSubscriptionVendor]}, 
-// 		 {"context": undefined, "emitter": [RCTDeviceEventEmitter], 
-// 		 "eventType": "peerConnectionAddedStream", "key": 3, "listener": [Function anonymous], "subscriber": [EventSubscriptionVendor]}, 
-// 		 {"context": undefined, "emitter": [RCTDeviceEventEmitter], 
-// 		 "eventType": "peerConnectionRemovedStream", "key": 3, "listener": [Function anonymous], "subscriber": [EventSubscriptionVendor]}, 
-// 		 {"context": undefined, "emitter": [RCTDeviceEventEmitter], 
-// 		 "eventType": "mediaStreamTrackMuteChanged", "key": 3, "listener": [Function anonymous], "subscriber": [EventSubscriptionVendor]}, 
-// 		 {"context": undefined, "emitter": [RCTDeviceEventEmitter], 
-// 		 "eventType": "peerConnectionGotICECandidate", "key": 3, "listener": [Function anonymous], "subscriber": [EventSubscriptionVendor]}, 
-// 		 {"context": undefined, "emitter": [RCTDeviceEventEmitter], 
-// 		 "eventType": "peerConnectionIceGatheringChanged", "key": 3, "listener": [Function anonymous], "subscriber": [EventSubscriptionVendor]}, 
-// 		 {"context": undefined, "emitter": [RCTDeviceEventEmitter], 
-// 		 "eventType": "peerConnectionDidOpenDataChannel", "key": 3, "listener": [Function anonymous], "subscriber": [EventSubscriptionVendor]
-// 	}], 
-// 	"close": [Function anonymous], 
-// 		 "iceConnectionState": "new", "iceGatheringState": "new", "signalingState": "stable"
-// }
-
-
 		if (object.props.localStream) {
 			pc.addStream(object.props.localStream)
 
@@ -848,306 +762,6 @@ createPeerConnection = (object, socketID, callback) => {
 }
 
 
-//# MY FUNCTION, CREATED SO THAT WE WILL USE NEEDED
-// create_offer_through_pc(sdpConstraints, socket_ID){
-// 	if (object.props.createOffer){
-// 		pc.createOffer(sdpConstraints)
-// 		.then(sdp => {
-// 			pc.setLocalDescription(sdp)
-
-// 			console.log('sendToPeer triggered in line 354')
-
-// 			sendToPeer(object, 'offer', sdp, {
-// 				local: object.props.live_socket.id,
-// 				remote: socket_ID
-// 			})
-// 		})
-// 	}
-// }
-
-
-// on connection-success event
-	// joining a room
-	// getting local stream  (:::THINKING OF IT TO USE ONLY WHEN CALL IS ANSWERED) # DONE
-	// setting status redux
-	// set messages obtained by server redux (:::CAN BE SET ACCORDINGLY)
-// on joined-peers event
-	// set status redux
-// on peer-disconnect event (:::ONLY TO BE USED WHEN CALL IS ENDED)
-	// set_remotesteams redux
-	// set_selectedvideo redux
-	// set_status redux
-// online-peers event (THIS CREATES AND SENDS OFFER TO ALL) (:::ONLY TO BE USED WHEN CALL IS SENT)
-	// createPeerConnection func
-		// add_to_sendchannels redux
-	// handleReceiveMessage function
-		// add_to_messages redux
-	// receiveChannelCallback func		
-		// handleReceiveMessage
-	// pc.createOffer(object.state.sdpConstraints)
-// offer event (THIS CREATES ANSWERS AND SENDS TO ALL) (:::ONLY TO BE USED WHEN CALL IS ANSWERED)
-	// add_to_sendchannels redux
-// answer event
-// candidate event
-// NOT TO USE
-// joinRoom function WITH AUTO CONFERENCE CALL
-// joinRoom = (object) => {
-// 	// reduxified
-// 	// object.setState({ 
-// 	// 	connect: true, // state
-// 	// })
-// 	object.props.set_connect( true )
-
-
-// 	const room = object.props.room || ''
-
-// 	object.socket = io.connect(
-// 		object.serviceIP,
-// 		{
-// 			path: '/io/webrtc',
-// 			query: {
-// 				// room: `/${room}`, //'/',
-// 				room: `/room1`, //'/',
-// 			}
-// 		}
-// 	)
-
-// 	object.socket.on('connection-success', data => {
-
-// 		// object.getLocalStream() // SHIFTED TO online-peers event
-
-// 		console.log(data.success)
-// 		const status = data.peerCount > 1 ? `Total Connected Peers to room ${object.props.room}: ${data.peerCount}` : object.props.status
-// 		// reduxified
-// 		// object.setState({ // state
-// 		// 	status,
-// 		// 	messages: data.messages
-// 		// })
-// 		object.props.set_status( status )
-// 		object.props.set_messages( (data.messages == null ? [] : data.messages)  )
-
-// //# THIS IS WHATS GETTING AND STORING THE INCOMING MESSAGES
-// 		object.socket.on('message', data => {
-// 			console.log('message', data)
-// 			object.props.add_to_messages( data )
-// 			console.log('MESSAGES ARE BELOW')
-// 			console.log( object.props.messages )
-// 		})
-
-// 	})
-
-// 	object.socket.on('joined-peers', data => {
-// 		// reduxified
-// 		// object.setState({ // state
-// 		// 	status: data.peerCount > 1 ? `Total Connected Peers to room ${object.state.room}: ${data.peerCount}` : 'Waiting for other peers to connect'
-// 		// })
-// 		object.props.set_status( data.peerCount > 1 ? `Total Connected Peers to room ${object.props.room}: ${data.peerCount}` : 'Waiting for other peers to connect' )
-// 	})
-
-// 	object.socket.on('peer-disconnected', data => {
-// 		console.log('peer-disconnected', data)
-
-// 		const remoteStreams = object.props.remoteStreams.filter(stream => stream.id !== data.socketID)
-		
-// 		// reduxified
-// 		// object.setState(prevState => { // state
-// 		// 	// check if disconnected peer is the selected video and if there still connected peers, then select the first
-// 		// 	const selectedVideo = prevState.selectedVideo.id === data.socketID && remoteStreams.length ? { selectedVideo: remoteStreams[0] } : null
-
-// 		// 	return {
-// 		// 		// remoteStream: remoteStreams.length > 0 && remoteStreams[0].stream || null,
-// 		// 		remoteStreams,
-// 		// 		...selectedVideo,
-// 		// 		status: data.peerCount > 1 ? `Total Connected Peers to room ${object.state.room}: ${data.peerCount}` : 'Waiting for other peers to connect'
-// 		// 	}
-// 		// })
-// 		object.props.set_remotesteams( remoteStreams )
-// 		object.props.set_selectedvideo( selectedVideo )
-// 		object.props.set_status( data.peerCount > 1 ? `Total Connected Peers to room ${object.props.room}: ${data.peerCount}` : 'Waiting for other peers to connect' )
-// 	})
-
-// // THIS BLOCK IS WHERE ALL THE ONLINE PEERS ARE BEING SENT createOffer
-
-// 	//# HERE WE TRYING TO createPeerConnection TO ONLINE COMING PERSON
-// 	//# ALSO HERE WE GETTING LOCAL STREAM, DATA CHANNEL, MEANS WE STARTING PROCESS HERE
-// 	object.socket.on('online-peer', socketID => {
-// 		// debugger
-// 		console.log('connected peers ...', socketID)
-
-// 		// create and send offer to the peer (data.socketID)
-// 		// 1. Create new pc
-// 		createPeerConnection(object, socketID, pc => {
-// 			// 2. Create Offer
-// 			if (pc) {
-				
-// 				getLocalStream(object) // SHIFTED FROM connection-success event, commented out there
-
-// 				// Send Channel
-// 				const handleSendChannelStatusChange = (event) => {
-// 					console.log('send channel status: ' + object.props.sendChannels[0].readyState)
-// 				}
-
-// 				const sendChannel = pc.createDataChannel('sendChannel')
-// 				sendChannel.onopen = handleSendChannelStatusChange
-// 				sendChannel.onclose = handleSendChannelStatusChange
-
-// 				// reduxified		
-// 				// object.setState(prevState => { // state
-// 				// 	return {
-// 				// 		sendChannels: [...prevState.sendChannels, sendChannel]
-// 				// 	}
-// 				// })
-// 				object.props.add_to_sendchannels( sendChannel )
-
-// 				// Receive Channels
-// 				const handleReceiveMessage = (event) => {
-// 					const message = JSON.parse(event.data)
-// 					console.log(message)
-// 					// reduxified
-// 					// object.setState(prevState => { // state
-// 					// 	return {
-// 					// 		messages: [...prevState.messages, message]
-// 					// 	}
-// 					// })
-// 					object.props.add_to_messages( message )
-// 				}
-
-// 				const handleReceiveChannelStatusChange = (event) => {
-// 					if (object.receiveChannel) {
-// 						console.log("receive channel's status has changed to " + object.receiveChannel.readyState);
-// 					}
-// 				}
-
-// 				const receiveChannelCallback = (event) => {
-// 					const receiveChannel = event.channel
-// 					receiveChannel.onmessage = handleReceiveMessage
-// 					receiveChannel.onopen = handleReceiveChannelStatusChange
-// 					receiveChannel.onclose = handleReceiveChannelStatusChange
-// 				}
-
-// 				pc.ondatachannel = receiveChannelCallback
-
-// 				// CREATED A FUNCTION FOR BELOW AND WILL BE USED WHEN NEEDED
-// 				// pc.createOffer(object.state.sdpConstraints)
-// 				// .then(sdp => {
-// 				// 	pc.setLocalDescription(sdp)
-
-// 				// 	console.log('sendToPeer triggered in line 354')
-
-// 				// 	sendToPeer(object, 'offer', sdp, {
-// 				// 		local: object.props.live_socket.id,
-// 				// 		remote: socketID
-// 				// 	})
-// 				// })
-// 				// create_offer_through_pc(object.state.sdpConstraints, socketID)
-// 			}
-// 		})
-// 	})
-
-// // THIS BLOCK IS WHERE createAnswer IS DONE WHEN OFFER IS ACHIEVED
-// 	//# HERE WE ARE USING createPeerConnection ON ANYONE OFFERING US
-// 	object.socket.on('offer', data => {
-// 		createPeerConnection(object, data.socketID, pc => {
-// 			if (pc) {
-
-// 				pc.addStream(object.props.localStream)
-
-// 				// Send Channel
-// 				const handleSendChannelStatusChange = (event) => {
-// 					console.log('send channel status: ' + object.props.sendChannels[0].readyState)
-// 				}
-
-// 				const sendChannel = pc.createDataChannel('sendChannel')
-// 				sendChannel.onopen = handleSendChannelStatusChange
-// 				sendChannel.onclose = handleSendChannelStatusChange
-
-// 				// reduxified			
-// 				// object.setState(prevState => { // state
-// 				// 	return {
-// 				// 		sendChannels: [...prevState.sendChannels, sendChannel]
-// 				// 	}
-// 				// })
-// 				object.props.add_to_sendchannels( sendChannel )
-
-// 				// Receive Channels
-// 				const handleReceiveMessage = (event) => {
-// 					const message = JSON.parse(event.data)
-// 					console.log('MESSAGE RECIEVED THROUGH webRTC BELOW')
-// 					console.log(message)
-// 					// reduxified
-// 					// object.setState(prevState => { // state
-// 					// 	return {
-// 					// 		messages: [...prevState.messages, message]
-// 					// 	}
-// 					// })
-// 					object.props.add_to_messages( message )
-// 				}
-
-// 				const handleReceiveChannelStatusChange = (event) => {
-// 					if (object.receiveChannel) {
-// 						console.log("receive channel's status has changed to " + object.receiveChannel.readyState);
-// 					}
-// 				}
-
-// 				const receiveChannelCallback = (event) => {
-// 					const receiveChannel = event.channel
-// 					receiveChannel.onmessage = handleReceiveMessage
-// 					receiveChannel.onopen = handleReceiveChannelStatusChange
-// 					receiveChannel.onclose = handleReceiveChannelStatusChange
-// 				}
-
-// 				pc.ondatachannel = receiveChannelCallback
-// 	// debugger
-// 				//# setRemoteDescription IS FOR OTHER PEER FROM WHOM OFFER IS RECEIVED 
-// 				pc.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(() => {
-// 					// 2. Create Answer
-// 					pc.createAnswer(object.state.sdpConstraints)
-// 					.then(sdp => {
-// 						pc.setLocalDescription(sdp)
-
-// 						console.log('sendToPeer triggered in line 420')
-
-// 						sendToPeer(object, 'answer', sdp, {
-// 							local: object.props.live_socket.id,
-// 							remote: data.socketID
-// 						})
-// 					})
-// 				})
-// 			}
-// 		})
-// 	})
-
-// 	//# ON answer JUST setRemoteDescription WILL BE MADE, REST WAS DONE PREVIOUSLY
-// 	object.socket.on('answer', data => {
-// 		// get remote's peerConnection
-// 		// const pc = object.props.peerConnections[ [data.socketID] ]
-// 		const pc = object.props.peerConnections.get( data.socketID )
-
-// 		console.log( '-------------data.socketID---------------')
-// 		console.log ( data.socketID )
-
-
-// 		console.log( '-------------pc---------------')
-// 		console.log ( pc )
-
-
-// 		console.log( '-------------peerconnections in 464---------------')
-// 		console.log ( object.props.peerConnections )
-
-// 		// console.log(data.sdp)
-// 		pc.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(()=>{})
-// 	})
-
-// // add_to_peerconnections
-// 	//# THIS IS USED, WHEN CALL INITIATER SENDS US candidate EMIT THROUGH SERVER 
-// 	object.socket.on('candidate', (data) => {
-// 		// get remote's peerConnection
-// 		const pc = object.props.peerConnections.get( data.socketID )
-
-// 		if (pc)
-// 			pc.addIceCandidate(new RTCIceCandidate(data.candidate))
-// 	})
-// }
 
 
 //# FUNCTION THAT SWITCHES VIDEO TO SELECTED ONE
@@ -1300,13 +914,13 @@ send_message = (object, message) => {
 // }
 
 
-makePhoneCall = (object, socketID) => {
+makePhoneCall = (object, socketID, room_string) => {
 
 	console.log('makePhoneCall TRIGGERED')
 
 	// create and send offer to the peer (data.socketID)
 	// 1. Create new pc
-	createPeerConnection(object, socketID, pc => {
+	createPeerConnection(object, room_string, socketID, pc => {
 		// 2. Create Offer
 		if (pc) {
 			
@@ -1370,7 +984,7 @@ makePhoneCall = (object, socketID) => {
 						sdp: sdp,
 						local: object.props.live_socket.id,
 						remote: socketID,
-						room: message.room_
+						room: room_string
 					},
 					object.props.live_socket.id,
 				)
@@ -1382,16 +996,16 @@ makePhoneCall = (object, socketID) => {
 }
 
 
-makeVideoCall = (object, socketID) => {
+makeVideoCall = (object, socketID, room_string) => {
 
 	console.log('makeVideoCall TRIGGERED')
 	// create and send offer to the peer (data.socketID)
 	// 1. Create new pc
-	createPeerConnection(object, socketID, pc => {
+	createPeerConnection(object, room_string, socketID, pc => {
 		// 2. Create Offer
 		if (pc) {
 			
-			getLocalStream(object) // SHIFTED FROM connection-success event, commented out there
+			getLocalStream(object, room_string) // SHIFTED FROM connection-success event, commented out there
 
 			// Send Channel
 			const handleSendChannelStatusChange = (event) => {
@@ -1459,7 +1073,7 @@ makeVideoCall = (object, socketID) => {
 						sdp: sdp,
 						local: object.props.live_socket.id,
 						remote: socketID,
-						room: message.room_
+						room: room_string
 					},
 					object.props.live_socket.id,
 				)

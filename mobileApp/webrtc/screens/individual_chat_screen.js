@@ -340,7 +340,7 @@ export default class IndividualChatScreen extends Component {
 				<TouchableHighlight activeOpacity={0.2} onPress={() => {
 					console.log(`socket id ${this.props.live_socket.id}`)
 					// console.log(this.props.live_socket.id)
-					makeVideoCall(this, this.props.live_socket.id)
+					makeVideoCall(this, this.props.live_socket.id, this.props.current_chat_screen_room_string)
 				}} style={styles.buttonWithoutBG}>
 					<Text style={styles.innerText}>
 						Make Video Call
