@@ -12,7 +12,7 @@ const {
 
 router.post('/create-room', async function(req, res, next){
 	try {
-		room_string = req.body.room_string
+		let room_string = req.body.room_string
 		let user_object = await create_room_and_add_users(room_string)
 		res.status(200).json({msg: 'OK'})
 

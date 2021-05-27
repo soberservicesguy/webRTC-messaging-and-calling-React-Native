@@ -35,9 +35,11 @@ export const mapStateToProps = state => {
 
 		isSignedIn: state.RTC.isSignedIn,
 
+
 		localStream: state.RTC.localStream,
 		remoteStream: state.RTC.remoteStream,
 		remoteStreams: state.RTC.remoteStreams,
+
 		peerConnections: state.RTC.peerConnections,
 		selectedVideo: state.RTC.selectedVideo,
 		sendChannels: state.RTC.sendChannels,
@@ -50,6 +52,7 @@ export const mapStateToProps = state => {
 		all_socket_rooms: state.RTC.all_socket_rooms,
 		sockets_listening: state.RTC.sockets_listening,
 		current_chat_screen_room_string: state.RTC.current_chat_screen_room_string,
+
 		call_incoming: state.RTC.call_incoming,
 		videocall_incoming: state.RTC.videocall_incoming,
 		call_outgoing: state.RTC.call_outgoing,

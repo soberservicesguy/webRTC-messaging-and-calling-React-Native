@@ -407,16 +407,27 @@ assign_socket_events = async (socket_object, object) => {
 //# THIS METHOD EMITS EVENT, PAYLOAD TO SERVER, SERVER UTILIZES IT TO SEND TO OTHERS (PEERS)
 sendToPeer = (object, messageType, payload, socketID) => {
 
-	console.log('sendToPeer TRIGGERED')
+	console.log(`sendToPeer TRIGGERED with ${messageType}`)
 
 	my_logger(null, null, 'function_entering', 'sendToPeer', 0)
 
 	try{
 		
-		object.socket.emit(messageType, {
-			socketID,
-			payload
-		})
+		if (object.socket){
+
+			object.socket.emit(messageType, {
+				socketID,
+				payload
+			})
+
+		} else {
+
+			object.props.live_socket.emit(messageType, {
+				socketID,
+				payload
+			})
+
+		}
 
 	} catch (err) {
 
@@ -1354,10 +1365,16 @@ makePhoneCall = (object, socketID) => {
 
 				console.log('sendToPeer triggered in createOffer')
 
-				sendToPeer(object, 'offer', sdp, {
-					local: object.props.live_socket.id,
-					remote: socketID
-				})
+				sendToPeer(object, 'offer', 
+					{
+						sdp: sdp,
+						local: object.props.live_socket.id,
+						remote: socketID,
+						room: message.room_
+					},
+					object.props.live_socket.id,
+				)
+
 			})
 		}
 	})
@@ -1392,8 +1409,9 @@ makeVideoCall = (object, socketID) => {
 			// })
 			object.props.add_to_sendchannels( sendChannel )
 
-			console.log('sendChannel is below')
-			console.log(sendChannel)
+			if (sendChannel){
+				console.log('sendChannel is AVAILABLE')
+			}
 
 			// Receive Channels
 			const handleReceiveMessage = (event) => {
@@ -1431,10 +1449,21 @@ makeVideoCall = (object, socketID) => {
 
 				console.log('sendToPeer triggered in createOffer')
 
-				sendToPeer(object, 'offer', sdp, {
-					local: object.props.live_socket.id,
-					remote: socketID
-				})
+				// sendToPeer(object, 'offer', sdp, {
+				// 	local: object.props.live_socket.id,
+				// 	remote: socketID
+				// })
+
+				sendToPeer(object, 'offer', 
+					{
+						sdp: sdp,
+						local: object.props.live_socket.id,
+						remote: socketID,
+						room: message.room_
+					},
+					object.props.live_socket.id,
+				)
+
 
 				console.log('OFFER SENT USING sendToPeer')
 			})

@@ -71,22 +71,24 @@ export default class IndividualChatScreen extends Component {
 		// console.log('this.props.own_number')
 		// console.log(this.props.own_number)
 
-		let room_string = ( Number(phone_number) < Number(this.props.own_number) ) ? `${phone_number}-${this.props.own_number}+` : `${this.props.own_number}-${phone_number}+`
+		let original_room_string = ( Number(phone_number) < Number(this.props.own_number) ) ? `${phone_number}-${this.props.own_number}+` : `${this.props.own_number}-${phone_number}+`
 		
 		console.log('room_string')
 		console.log(room_string)
-		this.props.set_current_room_string(room_string)
+		console.log(`SETTING ${original_room_string} AS ROOM STRING`)
+		this.props.set_current_room_string(original_room_string)
 		
 
 		console.log('current chat room string 1')
 		console.log({1: this.props.current_chat_screen_room_string})
 
-		this.props.set_current_room_string(room_string)
+
 
 		console.log('switch chat room string 2')
 		console.log({2: this.props.current_chat_screen_room_string})
 
-		room_string = this.props.current_chat_screen_room_string
+		let room_string = this.props.current_chat_screen_room_string
+		console.log(`ROOM STRING IN REDUX IS ${room_string}`)
 
 		console.log('room_string FInal ')
 		console.log(room_string)
@@ -97,7 +99,8 @@ export default class IndividualChatScreen extends Component {
 	
 		my_logger( null, null, 'function_exiting', 'componentDidMount' , 0)
 				
-		axios.post(utils.baseURL + '/rooms/create-room', {room_string:room_string})
+		console.log(`USING ${original_room_string} AS REQUEST PAYLOAD`)
+		axios.post(utils.baseURL + '/rooms/create-room', {room_string:original_room_string})
 		.then(function (response) {
 			console.log(JSON.stringify(response.data));
 		})
@@ -335,7 +338,7 @@ export default class IndividualChatScreen extends Component {
 				}
 
 				<TouchableHighlight activeOpacity={0.2} onPress={() => {
-					// console.log('socket id')
+					console.log(`socket id ${this.props.live_socket.id}`)
 					// console.log(this.props.live_socket.id)
 					makeVideoCall(this, this.props.live_socket.id)
 				}} style={styles.buttonWithoutBG}>
