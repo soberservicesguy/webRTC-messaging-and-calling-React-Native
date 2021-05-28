@@ -120,48 +120,13 @@ assign_socket_events = async (socket_object, object) => {
 			console.log('============TEST MESSAGE RECIEVED==========')
 			console.log('message', data)
 
-			let emit_message = await emit_new_message_recieved(object, data)
-			emit_message
-			.then(() => {console.log('------------------==========EMIT SUCCESSFUL==========-----------')})
-			.catch((err) => {
-				console.log('---------------================ERR FROM EMIT============----------------'
-					)
+			try{
+				let emit_message = await emit_new_message_recieved(object, data)
+				console.log('------------------==========EMIT SUCCESSFUL==========-----------')
+			} catch (err){
+				console.log('---------------================ERR FROM EMIT============----------------')
 				console.log(err)
-			})
-			// eventEmitter.emit('new_entry_in_recieved_message', object, data);
-
-		// USING NEW MESSAGE TO UPDATE ALL CHATNODES			
-
-
-
-			// object.props.add_to_messages( data )
-			// let chatnodes_details = getStoredObject('chatnodes_details')
-
-		// USING NEW MESSAGE TO ADD NEW CHAT NODE
-			// getStoredObject('chatnodes')
-			// .then((chatnodes_details) => {
-			// 	console.log('====================chatnodes_details==================')
-			// 	console.log(chatnodes_details)
-
-			// 	if ( !chatnodes_details.includes(data.user_details) ){
-
-			// 		// mergeToStoredObject('chat_nodes', data.user_details)
-			// 		eventEmitter.emit('new_entry_in_chatnodes', object, data.user_details);
-
-			// 	}				
-			// })
-			// WITHOUT ASYNC
-			// object.props.all_chatnodes.map((chatnodes_details) => {
-			// 	console.log('====================chatnodes_details==================')
-			// 	console.log(chatnodes_details)
-
-			// 	if ( !chatnodes_details.includes(data.user_details) ){
-
-			// 		// mergeToStoredObject('chat_nodes', data.user_details)
-			// 		eventEmitter.emit('new_entry_in_chatnodes', object, data.user_details);
-
-			// 	}								
-			// })
+			}
 
 			console.log('MESSAGES ARE BELOW')
 			// console.log( object.props.messages )
@@ -214,6 +179,10 @@ assign_socket_events = async (socket_object, object) => {
 	//# THIS IS USED, WHEN CALL INITIATER SENDS US candidate EMIT THROUGH SERVER 
 	socket_object.on('candidate', (data) => {
 
+		console.log('data in candidate OBTAINED')
+		// console.log(data)
+
+
 		console.log('CANDIDATE RECIEVED')
 		// get remote's peerConnection
 		const pc = object.props.peerConnections.get( data.socketID )
@@ -223,10 +192,8 @@ assign_socket_events = async (socket_object, object) => {
 
 		if (pc){
 			try{
-				console.log('data.candidate')
-				console.log(data.candidate)
-				console.log(`TRYING TO ADD ICE CANDIDATE WITH ${data.candidate}`)
 				pc.addIceCandidate(new RTCIceCandidate(data.candidate))
+				console.log(`ICE CANDIDATE ADDED SUCCESSFULLY`)
 			} catch (err){
 				console.log('BELOW ERROR OCCURED WHILE ADDING ICE CANDIDATAE')
 				console.log(err)
@@ -240,11 +207,12 @@ assign_socket_events = async (socket_object, object) => {
 
 		console.log('OFFER RECIEVED')
 
-		createPeerConnection(object, room_string, data.socketID, pc => {
+		createPeerConnection(object, data.room_string, data.socketID, pc => {
+			
 			if (pc) {
 
 				pc.addStream(object.props.localStream)
-				console.log('LOCAL STREAM ADDED')
+				console.log('UPON RECIEVING OFFER, LOCAL STREAM ADDED')
 
 				// Send Channel
 				const handleSendChannelStatusChange = (event) => {
@@ -262,6 +230,7 @@ assign_socket_events = async (socket_object, object) => {
 				// 	}
 				// })
 				object.props.add_to_sendchannels( sendChannel )
+				console.log('ADDED TO SENDCHANNEL')
 
 				// Receive Channels
 				const handleReceiveMessage = (event) => {
@@ -277,11 +246,15 @@ assign_socket_events = async (socket_object, object) => {
 					object.props.add_to_messages( message )
 				}
 
+				console.log('ASSIGNED HANDERECIEVGEMESSAGE')
+
 				const handleReceiveChannelStatusChange = (event) => {
 					if (object.receiveChannel) {
 						console.log("receive channel's status has changed to " + object.receiveChannel.readyState);
 					}
 				}
+
+				console.log('ASSIGNED HANDLERECEIVECHANNGELSTATUSCHANGE')
 
 				const receiveChannelCallback = (event) => {
 					const receiveChannel = event.channel
@@ -290,11 +263,15 @@ assign_socket_events = async (socket_object, object) => {
 					receiveChannel.onclose = handleReceiveChannelStatusChange
 				}
 
+				console.log('ASSIGNED RECIEVECHANNELCALLBACK')
+
 				pc.ondatachannel = receiveChannelCallback
 	// debugger
 				//# setRemoteDescription IS FOR OTHER PEER FROM WHOM OFFER IS RECEIVED 
 				pc.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(() => {
-					console.log('SETTING REMOTE DESCRIPTION')
+
+					console.log('UPON RECIEVING OFFER, SETTING REMOTE DESCRIPTION')
+
 					// 2. Create Answer
 					pc.createAnswer(object.state.sdpConstraints)
 					.then(sdp => {
@@ -302,12 +279,14 @@ assign_socket_events = async (socket_object, object) => {
 
 						console.log('sendToPeer triggered in line 420')
 
+						console.log(`SENDING SDP AFTER RECIEVING OFFER`)
+
 						sendToPeer(object, 'answer', 
 							{
 								sdp: sdp,
-								local: object.props.live_socket.id,
+								// local: object.props.live_socket.id,
 								remote: data.socketID,
-								room: room_string,
+								room: data.room_string,
 							},
 							object.props.live_socket.id,
 						)
@@ -320,11 +299,29 @@ assign_socket_events = async (socket_object, object) => {
 
 	//# ON answer JUST setRemoteDescription WILL BE MADE, REST WAS DONE PREVIOUSLY
 	socket_object.on('answer', data => {
-		console.log('ANSWER RECIEVED')
-		// get remote's peerConnection
-		// const pc = object.props.peerConnections[ [data.socketID] ]
+
+		console.log(`ANSWER RECIEVED with data.socketID is ${data.socketID}`)
+
 		const pc = object.props.peerConnections.get( data.socketID )
 
+		if (pc){
+			console.log('UPON RECIEVING OFFER, PC LOCATED')
+
+			try {
+
+				pc.setRemoteDescription(new RTCSessionDescription(data.sdp))	
+				console.log('UPON RECIEVING OFFER, setRemoteDescription DONE')
+
+			} catch (err){
+
+				console.log('UPON RECIEVING OFFER, ERROR WHILE setRemoteDescription')
+				console.log(err)
+
+			}
+
+		} else {
+			console.log('UPON RECIEVING OFFER, PC FAILED')
+		}
 		// console.log( '-------------data.socketID---------------')
 		// console.log ( data.socketID )
 
@@ -337,7 +334,8 @@ assign_socket_events = async (socket_object, object) => {
 		// console.log ( object.props.peerConnections )
 
 		// console.log(data.sdp)
-		pc.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(()=>{})
+
+
 	})		
 // my_logger('returned_value', returned_value, 'function_returning', 'assign_socket_events', 0)
 // return 
@@ -355,8 +353,6 @@ assign_socket_events = async (socket_object, object) => {
 sendToPeer = (object, messageType, payload, socketID) => {
 
 	console.log(`sendToPeer TRIGGERED with ${messageType}`)
-
-	my_logger(null, null, 'function_entering', 'sendToPeer', 0)
 
 	try{
 		
@@ -544,8 +540,6 @@ createPeerConnection = (object, room_string, socketID, callback) => {
 
 	console.log('createPeerConnection TRIGGERED')
 
-	my_logger(null, null, 'function_entering', 'createPeerConnection', 0)
-
 	try{
 
 		//# PASSING ICE SERVER AS ARG IN BELOW
@@ -567,8 +561,7 @@ createPeerConnection = (object, room_string, socketID, callback) => {
 		
 		// console.log(object.props.peerConnections)
 
-		//# THIS IS TRIGGERED WHEN WE ARE INTERESTED IN BEING CONNECTED (WE BECOME ICE CANDIDATE)
-		//# HERE THE SERVER WILL SEND candidate EVENT AND PAYLOAD TO PERSON WITH socketID 
+		//# THIS IS TRIGGERED WHEN SERVER FIRES OFFER EVENT
 		pc.onicecandidate = (e) => {
 			console.log('onicecandidate Triggered')
 
@@ -577,11 +570,17 @@ createPeerConnection = (object, room_string, socketID, callback) => {
 				console.log('SENDING CANDIDATE TO PEER')			
 				// console.log('sendToPeer triggered in onicecandidate')
 				//# THIS WILL BE ONLY SENT TO PARTICULAR PERSON (PEER)
-				sendToPeer(object, 'candidate', e.candidate, {
-					local: object.props.live_socket.id,
-					remote: socketID,
-					room: room_string,
-				})
+
+				sendToPeer(object, 'candidate', 
+					{
+						// sdp: sdp,
+						candidate:e.candidate,
+						local: object.props.live_socket.id,
+						remote: socketID,
+						room: room_string
+					},
+					object.props.live_socket.id,
+				)
 
 			}
 		}
@@ -632,6 +631,9 @@ createPeerConnection = (object, room_string, socketID, callback) => {
 				name: socketID,
 				stream: e.stream,
 			}
+
+			console.log('e.stream')
+			console.log(e.stream)
 
 			console.log('remoteVideo')
 			console.log(remoteVideo)
@@ -722,6 +724,7 @@ createPeerConnection = (object, room_string, socketID, callback) => {
 			object.props.set_selectedvideo( remoteVideo )
 			let selectedVideo = object.props.remoteStreams.filter(stream => stream.id === object.props.selectedVideo.id)
 			object.props.set_selectedvideo( selectedVideo )
+			object.props.set_selectedvideo( remoteVideo )
 			// selectedVideo = selectedVideo.length ? {} : { selectedVideo: remoteVideo } // state
 			// object.props.set_selectedvideo( selectedVideo )
 			// object.props.set_remotesteams( remoteStreams )
@@ -745,13 +748,14 @@ createPeerConnection = (object, room_string, socketID, callback) => {
 
 		if (pc){
 			console.log('pc CREATED')
-			console.log(pc)
+			// console.log(pc)
 		}
 
 
 	} catch (err) {
 
 		console.log('Something went wrong! pc not created!!')
+		console.log(err)
 		my_logger('err', err, 'error', 'createPeerConnection', 0)
 		callback(null)
 
@@ -989,6 +993,8 @@ makePhoneCall = (object, socketID, room_string) => {
 					object.props.live_socket.id,
 				)
 
+				console.log('OFFER CREATED AND SENT')
+
 			})
 		}
 	})
@@ -1057,16 +1063,15 @@ makeVideoCall = (object, socketID, room_string) => {
 
 			// CREATED A FUNCTION FOR BELOW AND WILL BE USED WHEN NEEDED
 			// create_offer_through_pc(object.state.sdpConstraints, socketID)
+
+
+
 			pc.createOffer(object.state.sdpConstraints)
 			.then(sdp => {
+
 				pc.setLocalDescription(sdp)
 
 				console.log('sendToPeer triggered in createOffer')
-
-				// sendToPeer(object, 'offer', sdp, {
-				// 	local: object.props.live_socket.id,
-				// 	remote: socketID
-				// })
 
 				sendToPeer(object, 'offer', 
 					{
@@ -1083,8 +1088,8 @@ makeVideoCall = (object, socketID, room_string) => {
 			})
 		}
 	
-		console.log('object.props.remoteStream')
-		console.log(object.props.remoteStream)
+		// console.log('object.props.remoteStream')
+		// console.log(object.props.remoteStream)
 	})
 
 }
@@ -1217,48 +1222,6 @@ goOnline = async (object) => {
 }
 
 
-// sendMessageInSocket = (object, message, room_name) => {
-
-
-// 	// let sockets_already_created = object.props.all_socket_rooms.keys()
-// 	// console.log('sockets_already_created')
-// 	// console.log(sockets_already_created)
-// 	// // let user_details = getStoredObject('self_user_details')
-// 	// let user_details = {user_name: object.props.own_name, user_number: object.props.own_number}
-
-// 	// if ( sockets_already_created != {} ){
-
-// 	// 	// object.socket = joinRoom(object, room_name)		
-// 	// 	joinRoom(object, room_name)// NO NEED TO RETURN FROM IT		
-// 	// 	console.log('object.socket')
-// 	// 	console.log(object.socket)
-// 	// 	assign_socket_events( object.socket, object )
-// 	// 	console.log('ASSIENMENT OF SOCKET EVENT COMPLETE and socket is below')		
-
-// 	// 	object.socket.emit('new-message', {user_details: user_details, message: message})
-
-// 	// } else {
-
-// 	// 	// console.log('SIZE IS BELOW')
-// 	// 	// console.log(object.props.all_socket_rooms.size)
-// 	// 	object.socket = object.props.all_socket_rooms.get(room_name)
-// 	// 	assign_socket_events( object.socket, object )
-// 	// 	console.log('ASSIENMENT OF SOCKET EVENT COMPLETE')		
-
-// 	// 	console.log('ASSIENMENT OF SOCKET EVENT COMPLETE and socket is below')		
-
-// 	// 	console.log(object.socket)
-
-// 	// 	object.socket.emit('new-message', {user_details: user_details, message: message})
-
-// 	// }
-
-
-
-// 	// --------------------------- NEW APPROACH ----------------------------
-// 	// object.socket.emit( 'join-room', {room_string: room_name} )
-// 	// object.socket.emit('new-message', {user_details: user_details, message: message})
-// }
 
 goOffline = (object) => {	
 

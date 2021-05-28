@@ -335,9 +335,6 @@ io.on('connection', socket => {
 	
 		console.log('onlinePeers TRIGGERED')
 
-		// console.log('data')
-		// console.log(data)
-// 
 		let room = data.socketID.room
 
 		// Databasified
@@ -355,31 +352,22 @@ io.on('connection', socket => {
 	
 		console.log('offer TRIGGERED')
 
-		// console.log('data')
-		// console.log(data)
-
 		// Databasified
 		let room = data.payload.room
+
 		const _connectedPeers = rooms[room]
 
-
-		for (const [socketID, socket] of _connectedPeers.entries()) {
+		for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
 			// don't send to self
-			if (socketID === data.socketID.remote) {
-				// console.log('Offer', socketID, data.socketID, data.payload.type)
+			if (socketID !== data.payload.remote) {
 
-				// socket.emit('offer', {
-				// 	sdp: data.payload,
-				// 	socketID: data.socketID.local
-				// })
-
-				socket.emit('offer', {
+				socket_and_phone_number.socket.emit('offer', {
 					sdp: data.payload.sdp,
 					socketID: data.socketID,
+					room_string:room,
 				})
 
-
-				console.log(`OFFER SENT TO ${data.socketID.local}`)
+				console.log(`OFFER SENT ${socketID}`)
 			}
 		}
 	})
@@ -388,21 +376,19 @@ io.on('connection', socket => {
 		
 		console.log('ANSWER TRIGGERED')
 
-		// console.log('data')
-		// console.log(data)
-
 		let room = data.payload.room
 
 		const _connectedPeers = rooms[room]
-		for (const [socketID, socket] of _connectedPeers.entries()) {
-			if (socketID === data.socketID.remote) {
+		for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
+
+			if (socketID !== data.payload.remote) {
 
 				// console.log('Answer', socketID, data.socketID, data.payload.type)
-				socket.emit('answer', {
-					sdp: data.payload,
-					socketID: data.socketID.local
+				socket_and_phone_number.socket.emit('answer', {
+					sdp: data.payload.sdp,
+					socketID: data.socketID
 				})
-				console.log(`ANSWER SENT TO ${data.socketID.local}`)
+				console.log(`ANSWER SENT TO ${socketID}`)
 			}
 		}
 
@@ -423,17 +409,17 @@ io.on('connection', socket => {
 	
 		console.log('CANDIDATE TRIGGERED')
 
-		let room = data.socketID.room
+		let room = data.payload.room
 
 		const _connectedPeers = rooms[room]
 		// send candidate to the other peer(s) if any
 		for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
-			if (socketID === data.socketID.remote) {
+			if (socketID !== data.socketID) {
 				socket_and_phone_number.socket.emit('candidate', {
-					candidate: data.payload,
-					socketID: data.socketID.local
+					candidate: data.payload.candidate,
+					socketID: data.socketID
 				})
-				console.log(`CANDIDATE SENT TO ${data.socketID.local}`)
+				console.log(`CANDIDATE SENT TO ${socketID}`)
 			}
 		}
 
@@ -479,7 +465,7 @@ io.on('connection', socket => {
 				connect_socket_to_room(room, rooms, required_socket, required_socket_id, other_persons_number)				
 				required_socket = null
 				required_socket_id = null
-// 
+
 			})
 
 		} else {

@@ -54,6 +54,7 @@ export default class IndividualChatScreen extends Component {
 			// messages:messageToRelevantChatNodeOnIndividualScreen(this.props.current_chat_screen_room_string),
 			// messages:[],
 			message_being_typed:'',
+			stream:null,
 		}
 	}
 
@@ -238,7 +239,7 @@ export default class IndividualChatScreen extends Component {
 
 	sendMessage(){
 
-		console.log('ENTEREED 1')
+		// console.log('ENTEREED 1')
 
 		let message = this.state.message_being_typed
 
@@ -255,9 +256,9 @@ export default class IndividualChatScreen extends Component {
 
 		// room_string = ( Number(number1) < Number(number2) ) ? `${number1}-${number2}+` : `${number2}-${number1}+`
 
-		console.log('ENTEREED 2')
-		console.log('room string in indivdual screen is below')
-		console.log(this.props.current_chat_screen_room_string)
+		// console.log('ENTEREED 2')
+		// console.log('room string in indivdual screen is below')
+		// console.log(this.props.current_chat_screen_room_string)
 
 		message = {
 			text: message, 
@@ -267,14 +268,14 @@ export default class IndividualChatScreen extends Component {
 			senders_details: `${this.props.own_name}-${this.props.own_number}+`,
 			socketID:{local: this.props.socket_id},
 		}
-		console.log('ENTEREED 3')
+		// console.log('ENTEREED 3')
 		
-		console.log('message in sendMessage REACT')
-		console.log(message)
+		// console.log('message in sendMessage REACT')
+		// console.log(message)
 
 		eventEmitter.emit('new_entry_in_message', this, message)
 
-		console.log('ENTEREED 4')
+		// console.log('ENTEREED 4')
 		// this.setState( prev => ({...prev, messages: [...prev.messages, ...this.props.new_messages_of_current_room]}) ) // I THINK THIS IS DOUBING IT
 		// this.setState( prev => ({...prev, messages: [...prev.messages, message, ...this.props.new_messages_of_current_room]}) ) // REMOVED message as it was being doubled
 	// OLD
@@ -329,13 +330,53 @@ export default class IndividualChatScreen extends Component {
 					/>
 				}
 
-				{
-					this.props.selectedVideo &&
-					<RTCView
-						streamURL={this.props.selectedVideo.toURL()}
-						style={{width:200, height:200}} 
-					/>
+				{this.props.videocall_incoming && 
+					<Button onPress={() => {}}>
+						Accept Call
+					</Button>
 				}
+
+				{
+					this.props.remoteStreams.length > 0 &&
+					this.props.remoteStreams.map((video_stream, index) => {
+						console.log('VIDEO STREAM')
+						{/*console.log(video_stream)*/}
+						{/*console.log(video_stream.stream.toURL())*/}
+						{/*console.log(video_stream.stream._tracks)*/}
+						console.log('this.props.selectedVideo')
+						console.log(this.props.selectedVideo)
+
+
+						{/*this.setState(prev => ({...prev, stream: video_stream.stream}))*/}
+						
+						{/*if (index < 3){*/}
+							return(
+								<RTCView
+									objectFit='cover'
+									key={1}
+							      zOrder={2}
+									// console.log('VIDEO AVAILABLE')
+									// streamURL={video_stream.stream.toURL()}
+									// streamURL={video_stream.stream.toURL()}
+									// streamURL={(this.state.stream !== null) ? this.state.stream.toURL() : null}
+									// streamURL={this.props.selectedVideo}
+									streamURL={this.props.selectedVideo.stream.toURL()}
+									style={{width:200, height:200}} 
+								/>
+							)
+						{/*}*/}
+					})
+
+				}
+
+
+{/*					{
+						<RTCView
+						// console.log('VIDEO AVAILABLE')
+						streamURL={this.props.selectedVideo.toURL()}
+						// streamURL={this.props.selectedVideo}
+						style={{width:200, height:200}} 
+					/>}*/}
 
 				<TouchableHighlight activeOpacity={0.2} onPress={() => {
 					console.log(`socket id ${this.props.live_socket.id}`)

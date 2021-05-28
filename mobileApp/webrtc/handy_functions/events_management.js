@@ -22,7 +22,7 @@ const { my_logger } = require('./my_custom_logger')
 // EVENT handeler functions start here
 var handleNewSocket = function(object, room_string){
 
-	my_logger(null, null, 'function_entering', 'handleNewSocket', 0)
+	// my_logger(null, null, 'function_entering', 'handleNewSocket', 0)
 
 	try{
 
@@ -86,8 +86,8 @@ var handleChatnodeAddition = async function(object, new_chatnode){
 			// get this chatnode, if not available only then create new one
 
 			let all_chatnodes = await getStoredObject('chatnodes')
-			console.log('all_chatnodes TO SHOW')
-			console.log(all_chatnodes)
+			// console.log('all_chatnodes TO SHOW')
+			// console.log(all_chatnodes)
 
 			let unix_time = new Date()
 
@@ -169,8 +169,8 @@ var handleMessageAddition = async function(object, new_message){
 
 	}
 
-	console.log('new_message check')
-	console.log(new_message)
+	// console.log('new_message check')
+	// console.log(new_message)
 
 	let {senders_details} = new_message
 
@@ -286,8 +286,8 @@ var handleMessageAddition = async function(object, new_message){
 
 var handleMessageRecieving = async function(object, new_message){
 
-	console.log("===================== NEW MESSAGE IS BELOW =====================")
-	console.log(new_message)
+	// console.log("===================== NEW MESSAGE IS BELOW =====================")
+	// console.log(new_message)
 
 // 1 store in messages
 	// setObjectValue('stored_messages', new_message)
@@ -306,8 +306,8 @@ var handleMessageRecieving = async function(object, new_message){
 		// NOT NEEDED, IT WILL BE ONLY USED TO RECIEVE AND NOT TO SEND
 		// object.props.add_to_new_message_of_current_room( new_message )
 
-		console.log('-----------ALL CHATNODES ARE BELOW----------------')
-		console.log(object.props.all_chatnodes)
+		// console.log('-----------ALL CHATNODES ARE BELOW----------------')
+		// console.log(object.props.all_chatnodes)
 	// OLD
 		// object.setState(
 		// 	prev => { 
@@ -361,11 +361,11 @@ function create_chatnode_if_not_exists(object, new_message){
 	// CHECK IF THERE IS CHAT NODE FOR IT, IF NOT CREATE IT		
 
 	// chat_node being checked in redux only
-	console.log(' ### current all_chatnodes is below ### ')
-	console.log(object.props.all_chatnodes)
+	// console.log(' ### current all_chatnodes is below ### ')
+	// console.log(object.props.all_chatnodes)
 
-	console.log(' ### new_message is below ### ')
-	console.log(new_message)
+	// console.log(' ### new_message is below ### ')
+	// console.log(new_message)
 
 	let chat_nodes = object.props.all_chatnodes.filter(
 		function(item){
@@ -373,8 +373,8 @@ function create_chatnode_if_not_exists(object, new_message){
 		}
 	)
 
-	console.log('-------------------------matched chat_nodes------------------------')
-	console.log(chat_nodes)
+	// console.log('-------------------------matched chat_nodes------------------------')
+	// console.log(chat_nodes)
 
 	if ( chat_nodes.length === 0  ){
 		let count = 0
@@ -436,8 +436,8 @@ function create_chatnode_if_not_exists(object, new_message){
 			last_message: last_message,
 		}
 		// if ( chat_node_proper != null && chat_node_proper != undefined){
-			console.log('----------------------chat_node_proper------------------------')
-			console.log(chat_node_proper)
+			// console.log('----------------------chat_node_proper------------------------')
+			// console.log(chat_node_proper)
 			object.props.add_to_chatnodes( chat_node_proper )
 		// }
 	}
@@ -465,8 +465,8 @@ async function sort_and_make_chatnodes_proper(object){
 		return time2 - time1;
 	});
 
-	console.log('====================chat_nodes_after_last_messages_and_unread_count==================')
-	console.log(chat_nodes_after_last_messages_and_unread_count)
+	// console.log('====================chat_nodes_after_last_messages_and_unread_count==================')
+	// console.log(chat_nodes_after_last_messages_and_unread_count)
 
 	// if ( !chat_nodes_after_last_messages_and_unread_count.includes(null) && !chat_nodes_after_last_messages_and_unread_count.includes(undefined)){
 		
