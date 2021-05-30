@@ -93,355 +93,260 @@ assign_socket_events = async (socket_object, object) => {
 
 	console.log('-----------------ABOUT TO ASSIGN EVENTS TO SOCKETS-------------')
 
-
-	// NEW WEBRTC EVENTS
+	// console.log(socket_object)
 	socket_object.on('connection-success', data => {
-		// MOVED TO MAKE PHONE CALL
-		makeVideoCall(object) // use this
-
+		console.log('======================= connection-success TRIGGERED ====================')
+		// object.getLocalStream() // SHIFTED TO online-peers event
+		object.props.set_own_socket_id( data.success )
 		// object.props.set_socket( object.socket )
 
-
 		console.log(data.success)
-		const status = data.peerCount > 1 ? `Total Connected Peers to room ${object.state.room}: ${data.peerCount}` : object.state.status
+		let my_socket_id = data.success
+		object.props.set_own_socket_id( my_socket_id )
 
-		object.setState({
-			status,
-			messages: data.messages
+		const status = data.peerCount > 1 ? `Total Connected Peers to room ${object.props.room}: ${data.peerCount}` : object.props.status
+		// reduxified
+		// object.setState({ // state
+		// 	status,
+		// 	messages: data.messages
+		// })
+		object.props.set_status( status )
+		object.props.set_messages( (data.messages == null ? [] : data.messages)  )
+
+//# THIS IS WHATS GETTING AND STORING THE INCOMING MESSAGES IN ASYNCSTORAGE AND SHOWS TO FRONTEND
+		console.log('x-x-x-x-x-  ASSIGNED ON MESSAGE EVENT -X-X-X-X-X-X')
+
+		socket_object.on('message', async data => {
+			console.log('============TEST MESSAGE RECIEVED==========')
+			console.log('message', data)
+
+			try{
+				let emit_message = await emit_new_message_recieved(object, data)
+				console.log('------------------==========EMIT SUCCESSFUL==========-----------')
+			} catch (err){
+				console.log('---------------================ERR FROM EMIT============----------------')
+				console.log(err)
+			}
+
+			console.log('MESSAGES ARE BELOW')
+			// console.log( object.props.messages )
+
 		})
+
 	})
 
 	socket_object.on('joined-peers', data => {
-
-		object.setState({
-			status: data.peerCount > 1 ? `Total Connected Peers to room ${object.state.room}: ${data.peerCount}` : 'Waiting for other peers to connect'
-		})
+		// reduxified
+		// object.setState({ // state
+		// 	status: data.peerCount > 1 ? `Total Connected Peers to room ${object.state.room}: ${data.peerCount}` : 'Waiting for other peers to connect'
+		// })
+		object.props.set_status( data.peerCount > 1 ? `Total Connected Peers to room ${object.props.room}: ${data.peerCount}` : 'Waiting for other peers to connect' )
 	})
 
 	socket_object.on('peer-disconnected', data => {
 		console.log('peer-disconnected', data)
 
-		const remoteStreams = object.state.remoteStreams.filter(stream => stream.id !== data.socketID)
+		const remoteStreams = object.props.remoteStreams.filter(stream => stream.id !== data.socketID)
+		
+		// reduxified
+		// object.setState(prevState => { // state
+		// 	// check if disconnected peer is the selected video and if there still connected peers, then select the first
+		// 	const selectedVideo = prevState.selectedVideo.id === data.socketID && remoteStreams.length ? { selectedVideo: remoteStreams[0] } : null
 
-		object.setState(prevState => {
-			// check if disconnected peer is the selected video and if there still connected peers, then select the first
-			const selectedVideo = prevState.selectedVideo.id === data.socketID && remoteStreams.length ? { selectedVideo: remoteStreams[0] } : null
+		// 	return {
+		// 		// remoteStream: remoteStreams.length > 0 && remoteStreams[0].stream || null,
+		// 		remoteStreams,
+		// 		...selectedVideo,
+		// 		status: data.peerCount > 1 ? `Total Connected Peers to room ${object.state.room}: ${data.peerCount}` : 'Waiting for other peers to connect'
+		// 	}
+		// })
+		object.props.set_remotesteams( remoteStreams )
+		object.props.set_selectedvideo( selectedVideo )
+		object.props.set_status( data.peerCount > 1 ? `Total Connected Peers to room ${object.props.room}: ${data.peerCount}` : 'Waiting for other peers to connect' )
+	})
 
-			return {
-				// remoteStream: remoteStreams.length > 0 && remoteStreams[0].stream || null,
-				remoteStreams,
-				...selectedVideo,
-				status: data.peerCount > 1 ? `Total Connected Peers to room ${object.state.room}: ${data.peerCount}` : 'Waiting for other peers to connect'
+// THIS BLOCK IS WHERE ALL THE ONLINE PEERS ARE BEING SENT createOffer
+
+	//# HERE WE TRYING TO createPeerConnection TO ONLINE COMING PERSON
+	//# ALSO HERE WE GETTING LOCAL STREAM, DATA CHANNEL, MEANS WE STARTING PROCESS HERE
+	socket_object.on('online-peer', socketID => {
+		// debugger
+		console.log('connected peers ...', socketID)
+
+	})
+
+// add_to_peerconnections
+	//# THIS IS USED, WHEN CALL INITIATER SENDS US candidate EMIT THROUGH SERVER 
+	socket_object.on('candidate', (data) => {
+
+		console.log('data in candidate OBTAINED')
+		// console.log(data)
+
+
+		console.log('CANDIDATE RECIEVED')
+		// get remote's peerConnection
+		const pc = object.props.peerConnections.get( data.socketID )
+		if (pc){
+			console.log('FOUND pc OBJECT')
+		}
+
+		if (pc){
+			try{
+				pc.addIceCandidate(new RTCIceCandidate(data.candidate))
+				console.log(`ICE CANDIDATE ADDED SUCCESSFULLY`)
+			} catch (err){
+				console.log('BELOW ERROR OCCURED WHILE ADDING ICE CANDIDATAE')
+				console.log(err)
+			}
+		}
+	})
+
+// THIS BLOCK IS WHERE createAnswer IS DONE WHEN OFFER IS ACHIEVED
+	//# HERE WE ARE USING createPeerConnection ON ANYONE OFFERING US
+	socket_object.on('offer', data => {
+
+		console.log('OFFER RECIEVED')
+
+		createPeerConnection(object, data.room_string, data.socketID, pc => {
+			
+			if (pc) {
+
+				pc.addStream(object.props.localStream)
+				console.log('UPON RECIEVING OFFER, LOCAL STREAM ADDED')
+
+				// Send Channel
+				const handleSendChannelStatusChange = (event) => {
+					console.log('send channel status: ' + object.props.sendChannels[0].readyState)
+				}
+
+				const sendChannel = pc.createDataChannel('sendChannel')
+				sendChannel.onopen = handleSendChannelStatusChange
+				sendChannel.onclose = handleSendChannelStatusChange
+
+				// reduxified			
+				// object.setState(prevState => { // state
+				// 	return {
+				// 		sendChannels: [...prevState.sendChannels, sendChannel]
+				// 	}
+				// })
+				object.props.add_to_sendchannels( sendChannel )
+				console.log('ADDED TO SENDCHANNEL')
+
+				// Receive Channels
+				const handleReceiveMessage = (event) => {
+					const message = JSON.parse(event.data)
+					console.log('MESSAGE RECIEVED THROUGH webRTC BELOW')
+					console.log(message)
+					// reduxified
+					// object.setState(prevState => { // state
+					// 	return {
+					// 		messages: [...prevState.messages, message]
+					// 	}
+					// })
+					object.props.add_to_messages( message )
+				}
+
+				console.log('ASSIGNED HANDERECIEVGEMESSAGE')
+
+				const handleReceiveChannelStatusChange = (event) => {
+					if (object.receiveChannel) {
+						console.log("receive channel's status has changed to " + object.receiveChannel.readyState);
+					}
+				}
+
+				console.log('ASSIGNED HANDLERECEIVECHANNGELSTATUSCHANGE')
+
+				const receiveChannelCallback = (event) => {
+					const receiveChannel = event.channel
+					receiveChannel.onmessage = handleReceiveMessage
+					receiveChannel.onopen = handleReceiveChannelStatusChange
+					receiveChannel.onclose = handleReceiveChannelStatusChange
+				}
+
+				console.log('ASSIGNED RECIEVECHANNELCALLBACK')
+
+				pc.ondatachannel = receiveChannelCallback
+	// debugger
+				//# setRemoteDescription IS FOR OTHER PEER FROM WHOM OFFER IS RECEIVED 
+				pc.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(() => {
+
+					console.log('UPON RECIEVING OFFER, SETTING REMOTE DESCRIPTION')
+
+					// 2. Create Answer
+					pc.createAnswer(object.state.sdpConstraints)
+					.then(sdp => {
+						pc.setLocalDescription(sdp)
+
+						console.log('sendToPeer triggered in line 420')
+
+						console.log(`SENDING SDP AFTER RECIEVING OFFER`)
+
+						sendToPeer(object, 'answer', 
+							{
+								sdp: sdp,
+								// local: object.props.live_socket.id,
+								remote: data.socketID,
+								room: data.room_string,
+							},
+							object.props.live_socket.id,
+						)
+
+					})
+				})
 			}
 		})
 	})
 
-	socket_object.on('online-peer-videocall', socketID => {
+	//# ON answer JUST setRemoteDescription WILL BE MADE, REST WAS DONE PREVIOUSLY
+	socket_object.on('answer', data => {
 
-		debugger
+		console.log(`ANSWER RECIEVED with data.socketID is ${data.socketID}`)
 
-		console.log('connected peers ...', socketID)
+		const pc = object.props.peerConnections.get( data.socketID )
 
-		startWebrtcOnCallersDeviceAndAssignEventsAndSendOffer(object, socketID)
+		if (pc){
+			console.log('UPON RECIEVING OFFER, PC LOCATED')
 
-	})
+			try {
 
-	socket_object.on('offer-videocall', data => {
+				pc.setRemoteDescription(new RTCSessionDescription(data.sdp))	
+				console.log('UPON RECIEVING OFFER, setRemoteDescription DONE')
 
-		startWebrtcOnRecieversDeviceAndAssignEventsAndSendAnswer(object, data)
+			} catch (err){
 
-	})
+				console.log('UPON RECIEVING OFFER, ERROR WHILE setRemoteDescription')
+				console.log(err)
 
-	socket_object.on('answer-videocall', data => {
-		// get remote's peerConnection
-		const pc = object.state.peerConnections[data.socketID]
-		// console.log(data.sdp)
-		pc.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(()=>{})
-	})
+			}
 
-	socket_object.on('candidate', (data) => {
-		// get remote's peerConnection
-		const pc = object.state.peerConnections[data.socketID]
-
-		if (pc)
-			pc.addIceCandidate(new RTCIceCandidate(data.candidate))
-	})
-
-
-	socket_object.on('message', async data => {
-		console.log('============TEST MESSAGE RECIEVED==========')
-		console.log('message', data)
-
-		try{
-			let emit_message = await emit_new_message_recieved(object, data)
-			console.log('------------------==========EMIT SUCCESSFUL==========-----------')
-		} catch (err){
-			console.log('---------------================ERR FROM EMIT============----------------')
-			console.log(err)
+		} else {
+			console.log('UPON RECIEVING OFFER, PC FAILED')
 		}
-
-		console.log('MESSAGES ARE BELOW')
-		// console.log( object.props.messages )
-
-	})
-
-// OLD EVENTS
-	// console.log(socket_object)
-// 	socket_object.on('connection-success', data => {
-// 		console.log('======================= connection-success TRIGGERED ====================')
-// 		// object.getLocalStream() // SHIFTED TO online-peers event
-// 		object.props.set_own_socket_id( data.success )
-// 		// object.props.set_socket( object.socket )
-
-// 		console.log(data.success)
-// 		let my_socket_id = data.success
-// 		object.props.set_own_socket_id( my_socket_id )
-
-// 		const status = data.peerCount > 1 ? `Total Connected Peers to room ${object.props.room}: ${data.peerCount}` : object.props.status
-// 		// reduxified
-// 		// object.setState({ // state
-// 		// 	status,
-// 		// 	messages: data.messages
-// 		// })
-// 		object.props.set_status( status )
-// 		object.props.set_messages( (data.messages == null ? [] : data.messages)  )
-
-// //# THIS IS WHATS GETTING AND STORING THE INCOMING MESSAGES IN ASYNCSTORAGE AND SHOWS TO FRONTEND
-// 		console.log('x-x-x-x-x-  ASSIGNED ON MESSAGE EVENT -X-X-X-X-X-X')
-
-// 		// socket_object.on('message', async data => {
-// 		// 	console.log('============TEST MESSAGE RECIEVED==========')
-// 		// 	console.log('message', data)
-
-// 		// 	try{
-// 		// 		let emit_message = await emit_new_message_recieved(object, data)
-// 		// 		console.log('------------------==========EMIT SUCCESSFUL==========-----------')
-// 		// 	} catch (err){
-// 		// 		console.log('---------------================ERR FROM EMIT============----------------')
-// 		// 		console.log(err)
-// 		// 	}
-
-// 		// 	console.log('MESSAGES ARE BELOW')
-// 		// 	// console.log( object.props.messages )
-
-// 		// })
-
-// 	})
-
-// 	socket_object.on('joined-peers', data => {
-// 		// reduxified
-// 		// object.setState({ // state
-// 		// 	status: data.peerCount > 1 ? `Total Connected Peers to room ${object.state.room}: ${data.peerCount}` : 'Waiting for other peers to connect'
-// 		// })
-// 		object.props.set_status( data.peerCount > 1 ? `Total Connected Peers to room ${object.props.room}: ${data.peerCount}` : 'Waiting for other peers to connect' )
-// 	})
-
-// 	socket_object.on('peer-disconnected', data => {
-// 		console.log('peer-disconnected', data)
-
-// 		const remoteStreams = object.props.remoteStreams.filter(stream => stream.id !== data.socketID)
-		
-// 		// reduxified
-// 		// object.setState(prevState => { // state
-// 		// 	// check if disconnected peer is the selected video and if there still connected peers, then select the first
-// 		// 	const selectedVideo = prevState.selectedVideo.id === data.socketID && remoteStreams.length ? { selectedVideo: remoteStreams[0] } : null
-
-// 		// 	return {
-// 		// 		// remoteStream: remoteStreams.length > 0 && remoteStreams[0].stream || null,
-// 		// 		remoteStreams,
-// 		// 		...selectedVideo,
-// 		// 		status: data.peerCount > 1 ? `Total Connected Peers to room ${object.state.room}: ${data.peerCount}` : 'Waiting for other peers to connect'
-// 		// 	}
-// 		// })
-// 		object.props.set_remotesteams( remoteStreams )
-// 		object.props.set_selectedvideo( selectedVideo )
-// 		object.props.set_status( data.peerCount > 1 ? `Total Connected Peers to room ${object.props.room}: ${data.peerCount}` : 'Waiting for other peers to connect' )
-// 	})
-
-// // THIS BLOCK IS WHERE ALL THE ONLINE PEERS ARE BEING SENT createOffer
-
-// 	//# HERE WE TRYING TO createPeerConnection TO ONLINE COMING PERSON
-// 	//# ALSO HERE WE GETTING LOCAL STREAM, DATA CHANNEL, MEANS WE STARTING PROCESS HERE
-// 	socket_object.on('online-peer', socketID => {
-// 		// debugger
-// 		console.log('connected peers ...', socketID)
-
-// 	})
-
-// // add_to_peerconnections
-// 	//# THIS IS USED, WHEN CALL INITIATER SENDS US candidate EMIT THROUGH SERVER 
-// 	socket_object.on('candidate', (data) => {
-
-// 		console.log('data in candidate OBTAINED')
-// 		// console.log(data)
+		// console.log( '-------------data.socketID---------------')
+		// console.log ( data.socketID )
 
 
-// 		console.log('CANDIDATE RECIEVED')
-// 		// get remote's peerConnection
-// 		const pc = object.props.peerConnections.get( data.socketID )
-// 		if (pc){
-// 			console.log('FOUND pc OBJECT')
-// 		}
-
-// 		if (pc){
-// 			try{
-// 				pc.addIceCandidate(new RTCIceCandidate(data.candidate))
-// 				console.log(`ICE CANDIDATE ADDED SUCCESSFULLY`)
-// 			} catch (err){
-// 				console.log('BELOW ERROR OCCURED WHILE ADDING ICE CANDIDATAE')
-// 				console.log(err)
-// 			}
-// 		}
-// 	})
-
-// // THIS BLOCK IS WHERE createAnswer IS DONE WHEN OFFER IS ACHIEVED
-// 	//# HERE WE ARE USING createPeerConnection ON ANYONE OFFERING US
-// 	socket_object.on('offer', data => {
-
-// 		console.log('OFFER RECIEVED')
-
-// 		createPeerConnection(object, data.room_string, data.socketID, pc => {
-			
-// 			if (pc) {
-
-// 				pc.addStream(object.props.localStream)
-// 				console.log('UPON RECIEVING OFFER, LOCAL STREAM ADDED')
-
-// 				// Send Channel
-// 				const handleSendChannelStatusChange = (event) => {
-// 					console.log('send channel status: ' + object.props.sendChannels[0].readyState)
-// 				}
-
-// 				const sendChannel = pc.createDataChannel('sendChannel')
-// 				sendChannel.onopen = handleSendChannelStatusChange
-// 				sendChannel.onclose = handleSendChannelStatusChange
-
-// 				// reduxified			
-// 				// object.setState(prevState => { // state
-// 				// 	return {
-// 				// 		sendChannels: [...prevState.sendChannels, sendChannel]
-// 				// 	}
-// 				// })
-// 				object.props.add_to_sendchannels( sendChannel )
-// 				console.log('ADDED TO SENDCHANNEL')
-
-// 				// Receive Channels
-// 				const handleReceiveMessage = (event) => {
-// 					const message = JSON.parse(event.data)
-// 					console.log('MESSAGE RECIEVED THROUGH webRTC BELOW')
-// 					console.log(message)
-// 					// reduxified
-// 					// object.setState(prevState => { // state
-// 					// 	return {
-// 					// 		messages: [...prevState.messages, message]
-// 					// 	}
-// 					// })
-// 					object.props.add_to_messages( message )
-// 				}
-
-// 				console.log('ASSIGNED HANDERECIEVGEMESSAGE')
-
-// 				const handleReceiveChannelStatusChange = (event) => {
-// 					if (object.receiveChannel) {
-// 						console.log("receive channel's status has changed to " + object.receiveChannel.readyState);
-// 					}
-// 				}
-
-// 				console.log('ASSIGNED HANDLERECEIVECHANNGELSTATUSCHANGE')
-
-// 				const receiveChannelCallback = (event) => {
-// 					const receiveChannel = event.channel
-// 					receiveChannel.onmessage = handleReceiveMessage
-// 					receiveChannel.onopen = handleReceiveChannelStatusChange
-// 					receiveChannel.onclose = handleReceiveChannelStatusChange
-// 				}
-
-// 				console.log('ASSIGNED RECIEVECHANNELCALLBACK')
-
-// 				pc.ondatachannel = receiveChannelCallback
-// 	// debugger
-// 				//# setRemoteDescription IS FOR OTHER PEER FROM WHOM OFFER IS RECEIVED 
-// 				pc.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(() => {
-
-// 					console.log('UPON RECIEVING OFFER, SETTING REMOTE DESCRIPTION')
-
-// 					// 2. Create Answer
-// 					pc.createAnswer(object.state.sdpConstraints)
-// 					.then(sdp => {
-// 						pc.setLocalDescription(sdp)
-
-// 						console.log('sendToPeer triggered in line 420')
-
-// 						console.log(`SENDING SDP AFTER RECIEVING OFFER`)
-
-// 						sendToPeer(object, 'answer', 
-// 							{
-// 								sdp: sdp,
-// 								// local: object.props.live_socket.id,
-// 								remote: data.socketID,
-// 								room: data.room_string,
-// 							},
-// 							object.props.live_socket.id,
-// 						)
-
-// 					})
-// 				})
-// 			}
-// 		})
-// 	})
-
-// 	//# ON answer JUST setRemoteDescription WILL BE MADE, REST WAS DONE PREVIOUSLY
-// 	socket_object.on('answer', data => {
-
-// 		console.log(`ANSWER RECIEVED with data.socketID is ${data.socketID}`)
-
-// 		const pc = object.props.peerConnections.get( data.socketID )
-
-// 		if (pc){
-// 			console.log('UPON RECIEVING OFFER, PC LOCATED')
-
-// 			try {
-
-// 				pc.setRemoteDescription(new RTCSessionDescription(data.sdp))	
-// 				console.log('UPON RECIEVING OFFER, setRemoteDescription DONE')
-
-// 			} catch (err){
-
-// 				console.log('UPON RECIEVING OFFER, ERROR WHILE setRemoteDescription')
-// 				console.log(err)
-
-// 			}
-
-// 		} else {
-// 			console.log('UPON RECIEVING OFFER, PC FAILED')
-// 		}
-// 		// console.log( '-------------data.socketID---------------')
-// 		// console.log ( data.socketID )
+		// console.log( '-------------pc---------------')
+		// console.log ( pc )
 
 
-// 		// console.log( '-------------pc---------------')
-// 		// console.log ( pc )
+		// console.log( '-------------peerconnections in 464---------------')
+		// console.log ( object.props.peerConnections )
+
+		// console.log(data.sdp)
 
 
-// 		// console.log( '-------------peerconnections in 464---------------')
-// 		// console.log ( object.props.peerConnections )
+	})		
+// my_logger('returned_value', returned_value, 'function_returning', 'assign_socket_events', 0)
+// return 
 
-// 		// console.log(data.sdp)
 
-
-// 	})		
+	my_logger(null, null, 'function_exiting', 'assign_socket_events', 0)
 	
 }
 
 
-// NEW
-getAvailableRoomMatesForPeerToPeerCall = (object) => {
-	// let all peers know I am joining
-	object.sendToPeer('onlinePeers-videocall', null, {local: this.socket.id})
-}
 
-
-// USABLE
 //# SOCKET.IO METHOD
 //# THIS WILL BE USED UNTIL RTCPeerConnection IS ESTABLISHED
 //# THIS METHOD EMITS EVENT, PAYLOAD TO SERVER, SERVER UTILIZES IT TO SEND TO OTHERS (PEERS)
@@ -477,145 +382,6 @@ sendToPeer = (object, messageType, payload, socketID) => {
 	my_logger(null, null, 'function_exiting', 'sendToPeer', 0)
 	
 }
-
-// NEW
-startWebrtcOnRecieversDeviceAndAssignEventsAndSendAnswer = (object, data) => {
-
-	object.createPeerConnection(data.socketID, pc => {
-		pc.addStream(object.state.localStream)
-
-		// Send Channel
-		const handleSendChannelStatusChange = (event) => {
-			console.log('send channel status: ' + object.state.sendChannels[0].readyState)
-		}
-
-		const sendChannel = pc.createDataChannel('sendChannel')
-		sendChannel.onopen = handleSendChannelStatusChange
-		sendChannel.onclose = handleSendChannelStatusChange
-		
-		object.setState(prevState => {
-			return {
-				sendChannels: [...prevState.sendChannels, sendChannel]
-			}
-		})
-
-		// Receive Channels
-		const handleReceiveMessage = (event) => {
-			const message = JSON.parse(event.data)
-			console.log(message)
-			object.setState(prevState => {
-				return {
-					messages: [...prevState.messages, message]
-				}
-			})
-		}
-
-		const handleReceiveChannelStatusChange = (event) => {
-			if (object.receiveChannel) {
-				console.log("receive channel's status has changed to " + object.receiveChannel.readyState);
-			}
-		}
-
-		const receiveChannelCallback = (event) => {
-			const receiveChannel = event.channel
-			receiveChannel.onmessage = handleReceiveMessage
-			receiveChannel.onopen = handleReceiveChannelStatusChange
-			receiveChannel.onclose = handleReceiveChannelStatusChange
-		}
-
-		pc.ondatachannel = receiveChannelCallback
-	debugger
-		pc.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(() => {
-			// 2. Create Answer
-			pc.createAnswer(object.state.sdpConstraints)
-				.then(sdp => {
-					pc.setLocalDescription(sdp)
-
-					object.sendToPeer('answer-videocall', sdp, {
-						local: object.socket.id,
-						remote: data.socketID
-					})
-				})
-		})
-	})
-}
-
-// NEW
-startWebrtcOnCallersDeviceAndAssignEventsAndSendOffer = (object, socketID) => {
-
-	// create and send offer to the peer (data.socketID)
-	// 1. Create new pc
-
-	object.createPeerConnection(socketID, pc => {
-		// 2. Create Offer
-		if (pc) {
-	
-			// Send Channel
-			const handleSendChannelStatusChange = (event) => {
-				console.log('send channel status: ' + object.state.sendChannels[0].readyState)
-			}
-
-			const sendChannel = pc.createDataChannel('sendChannel')
-			sendChannel.onopen = handleSendChannelStatusChange
-			sendChannel.onclose = handleSendChannelStatusChange
-		
-			object.setState(prevState => {
-				return {
-					sendChannels: [...prevState.sendChannels, sendChannel]
-				}
-			})
-
-			// Receive Channels
-			const handleReceiveMessage = (event) => {
-				const message = JSON.parse(event.data)
-				console.log(message)
-				object.setState(prevState => {
-					return {
-						messages: [...prevState.messages, message]
-					}
-				})
-			}
-
-			const handleReceiveChannelStatusChange = (event) => {
-				if (object.receiveChannel) {
-					console.log("receive channel's status has changed to " + object.receiveChannel.readyState);
-				}
-			}
-
-			const receiveChannelCallback = (event) => {
-				const receiveChannel = event.channel
-				receiveChannel.onmessage = handleReceiveMessage
-				receiveChannel.onopen = handleReceiveChannelStatusChange
-				receiveChannel.onclose = handleReceiveChannelStatusChange
-			}
-
-			pc.ondatachannel = receiveChannelCallback
-
-
-			pc.createOffer(object.state.sdpConstraints)
-				.then(sdp => {
-				
-					pc.setLocalDescription(sdp)
-
-					object.sendToPeer('offer-videocall', sdp, {
-						local: object.socket.id,
-						remote: socketID
-					})
-				})
-				.catch((err) => {
-					console.log('ERROR CAUGHT WHILE CREATING OFFER IN online-peer-videocall EVENT')
-					console.log(err)
-				})
-		}
-	})
-
-}
-
-
-
-
-
-
 
 //# SOCKET.IO METHOD
 //# MAKING SERVER TO TELL PEOPLE (PEERS) ABOUT PEOPLE THAT WHO ARE ONLINE
@@ -767,135 +533,6 @@ getLocalVoiceStream = (object) => {
 }
 
 
-// NEW
-createPeerConnection = (object, room_string, socketID, callback) => {
-
-	try {
-		let pc = new RTCPeerConnection(object.props.pc_config)
-
-		// add pc to peerConnections object
-		const peerConnections = { ...object.state.peerConnections, [socketID]: pc }
-		object.setState({
-			peerConnections
-		})
-
-		pc.onicecandidate = (e) => {
-			if (e.candidate) {
-				object.sendToPeer('candidate', e.candidate, {
-					local: object.socket.id,
-					remote: socketID,
-					room: room_string,
-				})
-			}
-		}
-
-		pc.oniceconnectionstatechange = (e) => {
-			// if (pc.iceConnectionState === 'disconnected') {
-			//   const remoteStreams = object.state.remoteStreams.filter(stream => stream.id !== socketID)
-
-			//   object.setState({
-			//     remoteStream: remoteStreams.length > 0 && remoteStreams[0].stream || null,
-			//   })
-			// }
-		}
-
-		pc.onaddstream = (e) => {
-			debugger
-
-			let _remoteStream = null
-			let remoteStreams = object.state.remoteStreams
-			let remoteVideo = {}
-			// if (e.stream.getTracks().length === 2) alert(e.stream.getTracks()[0].kind)
-
-			// let swappedStream = new MediaStream()
-			// console.log('0...', swappedStream)
-			// e.stream.getAudioTracks() && swappedStream.addTrack(e.stream.getAudioTracks()[0])
-			// console.log('1...', swappedStream)
-			// e.stream.getVideoTracks() && swappedStream.addTrack(e.stream.getVideoTracks()[0])
-			// console.log('2...', swappedStream)
-
-			// 1. check if stream already exists in remoteStreams
-			// const rVideos = object.state.remoteStreams.filter(stream => stream.id === socketID)
-			remoteVideo = {
-				id: socketID,
-				name: socketID,
-				stream: e.stream,
-			}
-			remoteStreams = [...object.state.remoteStreams, remoteVideo]
-			// 2. if it does exist then add track
-			// if (rVideos.length) {
-			//   _remoteStream = rVideos[0].stream
-			//   _remoteStream.addTrack(e.track, _remoteStream)
-			//   remoteVideo = {
-			//     ...rVideos[0],
-			//     stream: _remoteStream,
-			//   }
-			//   remoteStreams = object.state.remoteStreams.map(_remoteVideo => {
-			//     return _remoteVideo.id === remoteVideo.id && remoteVideo || _remoteVideo
-			//   })
-			// } else {
-			//   // 3. if not, then create new stream and add track
-			//   _remoteStream = new MediaStream()
-			//   _remoteStream.addTrack(e.track, _remoteStream)
-
-			//   remoteVideo = {
-			//     id: socketID,
-			//     name: socketID,
-			//     stream: _remoteStream,
-			//   }
-			//   remoteStreams = [...object.state.remoteStreams, remoteVideo]
-			// }
-
-
-
-			// const remoteVideo = {
-			//   id: socketID,
-			//   name: socketID,
-			//   stream: e.streams[0]
-			// }
-			object.setState(prevState => {
-				// If we already have a stream in display let it stay the same, otherwise use the latest stream
-				// const remoteStream = prevState.remoteStreams.length > 0 ? {} : { remoteStream: e.streams[0] }
-				const remoteStream = prevState.remoteStreams.length > 0 ? {} : { remoteStream: e.stream }
-
-				// get currently selected video
-				let selectedVideo = prevState.remoteStreams.filter(stream => stream.id === prevState.selectedVideo.id)
-				// if the video is still in the list, then do nothing, otherwise set to new video stream
-				selectedVideo = selectedVideo.length ? {} : { selectedVideo: remoteVideo }
-
-				return {
-					// selectedVideo: remoteVideo,
-					...selectedVideo,
-					// remoteStream: e.streams[0],
-					...remoteStream,
-					remoteStreams, //: [...prevState.remoteStreams, remoteVideo]
-				}
-			})
-		}
-
-		pc.close = () => {
-			// alert('GONE')
-		}
-
-		if (object.state.localStream) {
-			pc.addStream(object.state.localStream)
-
-		//   // object.state.localStream.getTracks().forEach(track => {
-		//   //   pc.addTrack(track, object.state.localStream)
-		//   // })
-		}
-		// return pc
-		callback(pc)
-
-	} catch(e) {
-		console.log('Something went wrong! pc not created!!', e)
-		// return;
-		callback(null)
-	}
-}
-
-
-// DEPRECATED
 //# socketID IS OF PERSON WE WANT TO CONNECT TO
 //# THIS METHOD IS LETTING US CONNECT TO PERSON DIRECTLY
 //# CAN NAME IT createRTCPeerConnection
@@ -1128,16 +765,9 @@ createPeerConnection = (object, room_string, socketID, callback) => {
 	
 }
 
-// NEW
-switchVideo = (object, _video) => {
-	debugger
-	// alert(_video)
-	object.setState({
-		selectedVideo: _video
-	})
-}
 
-// OLD
+
+
 //# FUNCTION THAT SWITCHES VIDEO TO SELECTED ONE
 switchVideo = (object, video) => {
 
@@ -1173,19 +803,25 @@ stopTracks = (stream) => {
 
 	console.log('stopTracks TRIGGERED')
 
+	my_logger(null, null, 'function_entering', 'stopTracks', 0)
+
 	try{
 
 		stream.getTracks().forEach(track => track.stop())
 	
+		// my_logger('returned_value', returned_value, 'function_returning', 'stopTracks', 0)
+		// return 
+
 	} catch (err) {
 
-		console.log(`Error caught while stopTracks ${err}`)
+		my_logger('err', err, 'error', 'stopTracks', 0)
+
 
 	}
 
+	my_logger(null, null, 'function_exiting', 'stopTracks', 0)
+	
 }
-
-
 
 
 //# FUNCTION CREATED, BUT NOT USED
@@ -1365,69 +1001,17 @@ makePhoneCall = (object, socketID, room_string) => {
 		
 }
 
-// NEW
-makeVideoCall = (object,) => {
 
-	let isFront = true;
-
-	mediaDevices.enumerateDevices().then(sourceInfos => {
-
-		console.log(sourceInfos);
-		let videoSourceId;
-		for (let i = 0; i < sourceInfos.length; i++) {
-			const sourceInfo = sourceInfos[i];
-			if (sourceInfo.kind == "videoinput" && sourceInfo.facing == (isFront ? "front" : "environment")) {
-				videoSourceId = sourceInfo.deviceId;
-			}
-		}
-
-		const constraints = {
-			audio: true,
-			video: {
-				mandatory: {
-					minWidth: 500, // Provide your own width, height and frame rate here
-					minHeight: 300,
-					minFrameRate: 30
-				},
-				facingMode: (isFront ? "user" : "environment"),
-				optional: (videoSourceId ? [{ sourceId: videoSourceId }] : [])
-			}
-		}
-
-		mediaDevices.getUserMedia(constraints)
-			.then((stream) => {
-
-				console.log('localStream... ', stream.toURL())
-
-				object.setState({
-					localStream: stream
-				})
-
-				getAvailableRoomMatesForPeerToPeerCall(object)
-
-			})
-			.catch((e) => {
-				console.log('getUserMedia Error: ', e)
-			});
-
-	});
-}
-
-
-
-// OLD
 makeVideoCall = (object, socketID, room_string) => {
 
 	console.log('makeVideoCall TRIGGERED')
-
-	getLocalStream(object, room_string) // SHIFTED FROM connection-success event, commented out there
 	// create and send offer to the peer (data.socketID)
 	// 1. Create new pc
-
 	createPeerConnection(object, room_string, socketID, pc => {
 		// 2. Create Offer
 		if (pc) {
 			
+			getLocalStream(object, room_string) // SHIFTED FROM connection-success event, commented out there
 
 			// Send Channel
 			const handleSendChannelStatusChange = (event) => {
