@@ -222,6 +222,108 @@ io.on('connection', socket => {
 	// assign_room_to_messages_if_exists(room)
 
 
+
+
+
+
+	// NEW VIDEOCALL EVENTS
+	socket.on('onlinePeers-videocall', (data) => {
+		console.log('onlinePeers TRIGGERED')
+
+		console.log('data in onlinePeers-videocall')
+		console.log(data)
+
+		let room = data.payload.room
+
+		const _connectedPeers = rooms[room]
+// 
+		for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
+			// don't send to self
+			if (socketID !== data.socketID.local) {
+				// console.log('online-peer-videocall', data.socketID, socketID)
+				
+				socket_and_phone_number.socket.emit(
+					'online-peer-videocall', 
+					{
+						socketID: socketID, 
+						room: room,
+					}
+				)
+
+			}
+		}
+	})
+
+	socket.on('offer-videocall', data => {
+		// console.log(data)
+		let room = data.payload.room
+		const _connectedPeers = rooms[room]
+
+		for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
+			// don't send to self
+			// if (socketID === data.socketID.remote) {
+			if (socketID !== data.payload.remote) {
+				// console.log('Offer', socketID, data.socketID, data.payload.type)
+				socket_and_phone_number.socket.emit('offer-videocall', {
+					sdp: data.payload.sdp,
+					socketID: data.socketID.local,
+					room:room,
+				})
+				console.log(`OFFER SENT ${socketID}`)
+			}
+		}
+	})
+
+	socket.on('answer-videocall', (data) => {
+		// console.log(data)
+		console.log('ANSWER TRIGGERED')
+		let room = data.payload.room
+
+		console.log('data.payload.sdp in answer')
+		console.log(data.payload.sdp)
+
+		const _connectedPeers = rooms[room]
+		// for (const [socketID, socket] of _connectedPeers.entries()) {
+		for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
+
+			// if (socketID === data.socketID.remote) {
+			if (socketID !== data.payload.remote) {
+
+				socket_and_phone_number.socket.emit('answer-videocall', {
+					sdp: data.payload.sdp,
+					socketID: data.socketID.remote,
+				})
+				console.log(`ANSWER SENT TO ${socketID}`)
+
+			}
+		}
+	})
+
+
+
+	socket.on('candidate', (data) => {
+		console.log(data)
+		console.log('CANDIDATE TRIGGERED')
+// 
+		let room = data.payload.room
+
+		const _connectedPeers = rooms[room]
+		// send candidate to the other peer(s) if any
+		// for (const [socketID, socket] of _connectedPeers.entries()) {
+		for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
+
+			if (socketID !== data.socketID) {
+				socket_and_phone_number.socket.emit('candidate', {
+					candidate: data.payload.candidate,
+					socketID: data.socketID
+				})
+				console.log(`CANDIDATE SENT TO ${socketID}`)
+			}
+		}
+	})
+
+
+
 	socket.on('new-message', (data) => {
 
 		console.log('x-x-x-x-x-x-x---------NEW MESSAGE IS BELOWx-x-x-x-x-x-x---------')
@@ -349,7 +451,7 @@ io.on('connection', socket => {
 	})
 
 	socket.on('offer', data => {
-	
+	// 
 		console.log('offer TRIGGERED')
 
 		// Databasified
@@ -360,7 +462,7 @@ io.on('connection', socket => {
 		for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
 			// don't send to self
 			if (socketID !== data.payload.remote) {
-
+// 
 				socket_and_phone_number.socket.emit('offer', {
 					sdp: data.payload.sdp,
 					socketID: data.socketID,
@@ -405,25 +507,26 @@ io.on('connection', socket => {
 	//   }
 	// })
 
-	socket.on('candidate', (data) => {
+// CANDIDATE COMMENTED OUT
+	// socket.on('candidate', (data) => {
 	
-		console.log('CANDIDATE TRIGGERED')
+	// 	console.log('CANDIDATE TRIGGERED')
 
-		let room = data.payload.room
+	// 	let room = data.payload.room
 
-		const _connectedPeers = rooms[room]
-		// send candidate to the other peer(s) if any
-		for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
-			if (socketID !== data.socketID) {
-				socket_and_phone_number.socket.emit('candidate', {
-					candidate: data.payload.candidate,
-					socketID: data.socketID
-				})
-				console.log(`CANDIDATE SENT TO ${socketID}`)
-			}
-		}
+	// 	const _connectedPeers = rooms[room]
+	// 	// send candidate to the other peer(s) if any
+	// 	for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
+	// 		if (socketID !== data.socketID) {
+	// 			socket_and_phone_number.socket.emit('candidate', {
+	// 				candidate: data.payload.candidate,
+	// 				socketID: data.socketID
+	// 			})
+	// 			console.log(`CANDIDATE SENT TO ${socketID}`)
+	// 		}
+	// 	}
 
-	})
+	// })
 
 	// connectedPeers.set(socket.id, socket)
 	socket.emit('connection-success', {

@@ -212,8 +212,8 @@ export default class ChatNodesScreen extends Component {
 
 			let room_string = ( Number(number1) < Number(number2) ) ? `${number1}-${number2}+` : `${number2}-${number1}+`
 
-			console.log('room_string generated in generateRoomString REACT')
-			console.log(room_string)
+			// console.log('room_string generated in generateRoomString REACT')
+			// console.log(room_string)
 	
 			my_logger(room_string, 'function_returning', 'generateRoomString', 0)
 			return room_string
@@ -297,8 +297,8 @@ export default class ChatNodesScreen extends Component {
 					data={ this.props.all_chatnodes } // create DATA as list of objects
 					renderItem={
 						({ item }) => {
-							console.log('item')
-							console.log(item)
+							// console.log('item')
+							// console.log(item)
 							return(							
 								<TouchableOpacity activeOpacity={0.2} 
 									style={{height:windowHeight * 0.3}}
@@ -306,8 +306,8 @@ export default class ChatNodesScreen extends Component {
 
 										this.props.set_current_room_string(item.room_string)
 										
-										console.log('item.phone_number is below')
-										console.log(item.phone_number)
+										// console.log('item.phone_number is below')
+										// console.log(item.phone_number)
 										// this.props.navigation.navigate('IndividualChat', {phone_number: item.phoneNumbers[0].number})
 										let number_pattern1 = /\d+(?=\-)/
 										let phone_number1 = item.room_string.match( number_pattern1 )
@@ -317,17 +317,17 @@ export default class ChatNodesScreen extends Component {
 										let phone_number2 = item.room_string.match( number_pattern2 )
 										phone_number2 = phone_number2[0]
 
-										console.log({phone_number1:phone_number1, phone_number2:phone_number2})
+										// console.log({phone_number1:phone_number1, phone_number2:phone_number2})
 
 										let other_persons_number
 
 										other_persons_number = (this.props.own_number === phone_number1) ? phone_number2 : phone_number1 
 
-										console.log('other_persons_number')
-										console.log(other_persons_number)
+										// console.log('other_persons_number')
+										// console.log(other_persons_number)
 
-										console.log('this.props.own_number')
-										console.log(this.props.own_number)
+										// console.log('this.props.own_number')
+										// console.log(this.props.own_number)
 
 
 										this.props.navigation.push(

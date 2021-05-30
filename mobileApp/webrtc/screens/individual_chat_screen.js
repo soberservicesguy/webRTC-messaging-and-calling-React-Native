@@ -36,7 +36,7 @@ import { setObjectValue } from "../handy_functions/asyncstorage_function"
 import { 
 	messageToRelevantChatNodeOnIndividualScreen,
 	generate_proper_room_string,
-	// makeVideoCall,
+	makeVideoCall,
  } from "../handy_functions/RTC_video_conference_call_functions"
 
 import {
@@ -86,8 +86,8 @@ export default class IndividualChatScreen extends Component {
 			messages: [],
 			sendChannels: [],
 			disconnected: false,
-			room: null,
-			connect: false,
+			// room: null,
+			// connect: false,
 			camera: true,
 			mic: true,
 
@@ -95,419 +95,29 @@ export default class IndividualChatScreen extends Component {
 	}
 
 
-	// makeVideoCall = () => {
+// not necessary
+	// joinRoom = () => {
 
-	// 	let isFront = true;
-
-	// 	mediaDevices.enumerateDevices().then(sourceInfos => {
-
-	// 		console.log(sourceInfos);
-	// 		let videoSourceId;
-	// 		for (let i = 0; i < sourceInfos.length; i++) {
-	// 			const sourceInfo = sourceInfos[i];
-	// 			if (sourceInfo.kind == "videoinput" && sourceInfo.facing == (isFront ? "front" : "environment")) {
-	// 				videoSourceId = sourceInfo.deviceId;
-	// 			}
-	// 		}
-
-	// 		const constraints = {
-	// 			audio: true,
-	// 			video: {
-	// 				mandatory: {
-	// 					minWidth: 500, // Provide your own width, height and frame rate here
-	// 					minHeight: 300,
-	// 					minFrameRate: 30
-	// 				},
-	// 				facingMode: (isFront ? "user" : "environment"),
-	// 				optional: (videoSourceId ? [{ sourceId: videoSourceId }] : [])
-	// 			}
-	// 		}
-
-	// 		mediaDevices.getUserMedia(constraints)
-	// 			.then((stream) => {
-
-	// 				console.log('localStream... ', stream.toURL())
-
-	// 				this.setState({
-	// 					localStream: stream
-	// 				})
-
-	// 				this.getAvailableRoomMatesForPeerToPeerCall()
-
-	// 			})
-	// 			.catch((e) => {
-	// 				console.log('getUserMedia Error: ', e)
-	// 			});
-
-	// 	});
-	// }
-
-	// getAvailableRoomMatesForPeerToPeerCall = () => {
-	// 	// let all peers know I am joining
-	// 	this.sendToPeer('onlinePeers-videocall', null, {local: this.socket.id})
-	// }
-
-	// sendToPeer = (messageType, payload, socketID) => {
-	// 	this.socket.emit(messageType, {
-	// 		socketID,
-	// 		payload
+	// 	this.setState({
+	// 		connect: true,
 	// 	})
-	// }
 
-	// createPeerConnection = (socketID, callback) => {
+	// 	const room = this.state.room || ''
 
-	// 	try {
-	// 		let pc = new RTCPeerConnection(this.state.pc_config)
-
-	// 		// add pc to peerConnections object
-	// 		const peerConnections = { ...this.state.peerConnections, [socketID]: pc }
-	// 		this.setState({
-	// 			peerConnections
-	// 		})
-
-	// 		pc.onicecandidate = (e) => {
-	// 			if (e.candidate) {
-	// 				this.sendToPeer('candidate', e.candidate, {
-	// 					local: this.socket.id,
-	// 					remote: socketID
-	// 				})
+	// 	// remove this
+	// 	this.socket = io.connect(
+	// 		this.serviceIP,
+	// 		{
+	// 			path: '/io/webrtc',
+	// 			query: {
+	// 				room: `/${room}`, //'/',
 	// 			}
 	// 		}
+	// 	)
 
-	// 		pc.oniceconnectionstatechange = (e) => {
-	// 			// if (pc.iceConnectionState === 'disconnected') {
-	// 			//   const remoteStreams = this.state.remoteStreams.filter(stream => stream.id !== socketID)
-
-	// 			//   this.setState({
-	// 			//     remoteStream: remoteStreams.length > 0 && remoteStreams[0].stream || null,
-	// 			//   })
-	// 			// }
-	// 		}
-
-	// 		pc.onaddstream = (e) => {
-	// 			debugger
-
-	// 			let _remoteStream = null
-	// 			let remoteStreams = this.state.remoteStreams
-	// 			let remoteVideo = {}
-	// 			// if (e.stream.getTracks().length === 2) alert(e.stream.getTracks()[0].kind)
-
-	// 			// let swappedStream = new MediaStream()
-	// 			// console.log('0...', swappedStream)
-	// 			// e.stream.getAudioTracks() && swappedStream.addTrack(e.stream.getAudioTracks()[0])
-	// 			// console.log('1...', swappedStream)
-	// 			// e.stream.getVideoTracks() && swappedStream.addTrack(e.stream.getVideoTracks()[0])
-	// 			// console.log('2...', swappedStream)
-
-	// 			// 1. check if stream already exists in remoteStreams
-	// 			// const rVideos = this.state.remoteStreams.filter(stream => stream.id === socketID)
-	// 			remoteVideo = {
-	// 				id: socketID,
-	// 				name: socketID,
-	// 				stream: e.stream,
-	// 			}
-	// 			remoteStreams = [...this.state.remoteStreams, remoteVideo]
-	// 			// 2. if it does exist then add track
-	// 			// if (rVideos.length) {
-	// 			//   _remoteStream = rVideos[0].stream
-	// 			//   _remoteStream.addTrack(e.track, _remoteStream)
-	// 			//   remoteVideo = {
-	// 			//     ...rVideos[0],
-	// 			//     stream: _remoteStream,
-	// 			//   }
-	// 			//   remoteStreams = this.state.remoteStreams.map(_remoteVideo => {
-	// 			//     return _remoteVideo.id === remoteVideo.id && remoteVideo || _remoteVideo
-	// 			//   })
-	// 			// } else {
-	// 			//   // 3. if not, then create new stream and add track
-	// 			//   _remoteStream = new MediaStream()
-	// 			//   _remoteStream.addTrack(e.track, _remoteStream)
-
-	// 			//   remoteVideo = {
-	// 			//     id: socketID,
-	// 			//     name: socketID,
-	// 			//     stream: _remoteStream,
-	// 			//   }
-	// 			//   remoteStreams = [...this.state.remoteStreams, remoteVideo]
-	// 			// }
-
-
-
-	// 			// const remoteVideo = {
-	// 			//   id: socketID,
-	// 			//   name: socketID,
-	// 			//   stream: e.streams[0]
-	// 			// }
-	// 			this.setState(prevState => {
-	// 				// If we already have a stream in display let it stay the same, otherwise use the latest stream
-	// 				// const remoteStream = prevState.remoteStreams.length > 0 ? {} : { remoteStream: e.streams[0] }
-	// 				const remoteStream = prevState.remoteStreams.length > 0 ? {} : { remoteStream: e.stream }
-
-	// 				// get currently selected video
-	// 				let selectedVideo = prevState.remoteStreams.filter(stream => stream.id === prevState.selectedVideo.id)
-	// 				// if the video is still in the list, then do nothing, otherwise set to new video stream
-	// 				selectedVideo = selectedVideo.length ? {} : { selectedVideo: remoteVideo }
-
-	// 				return {
-	// 					// selectedVideo: remoteVideo,
-	// 					...selectedVideo,
-	// 					// remoteStream: e.streams[0],
-	// 					...remoteStream,
-	// 					remoteStreams, //: [...prevState.remoteStreams, remoteVideo]
-	// 				}
-	// 			})
-	// 		}
-
-	// 		pc.close = () => {
-	// 			// alert('GONE')
-	// 		}
-
-	// 		if (this.state.localStream) {
-	// 			pc.addStream(this.state.localStream)
-
-	// 		//   // this.state.localStream.getTracks().forEach(track => {
-	// 		//   //   pc.addTrack(track, this.state.localStream)
-	// 		//   // })
-	// 		}
-	// 		// return pc
-	// 		callback(pc)
-
-	// 	} catch(e) {
-	// 		console.log('Something went wrong! pc not created!!', e)
-	// 		// return;
-	// 		callback(null)
-	// 	}
-	// }
-
-	// startWebrtcOnRecieversDeviceAndAssignEventsAndSendAnswer = (data) => {
-
-	// 	this.createPeerConnection(data.socketID, pc => {
-	// 		pc.addStream(this.state.localStream)
-
-	// 		// Send Channel
-	// 		const handleSendChannelStatusChange = (event) => {
-	// 			console.log('send channel status: ' + this.state.sendChannels[0].readyState)
-	// 		}
-
-	// 		const sendChannel = pc.createDataChannel('sendChannel')
-	// 		sendChannel.onopen = handleSendChannelStatusChange
-	// 		sendChannel.onclose = handleSendChannelStatusChange
-			
-	// 		this.setState(prevState => {
-	// 			return {
-	// 				sendChannels: [...prevState.sendChannels, sendChannel]
-	// 			}
-	// 		})
-
-	// 		// Receive Channels
-	// 		const handleReceiveMessage = (event) => {
-	// 			const message = JSON.parse(event.data)
-	// 			console.log(message)
-	// 			this.setState(prevState => {
-	// 				return {
-	// 					messages: [...prevState.messages, message]
-	// 				}
-	// 			})
-	// 		}
-
-	// 		const handleReceiveChannelStatusChange = (event) => {
-	// 			if (this.receiveChannel) {
-	// 				console.log("receive channel's status has changed to " + this.receiveChannel.readyState);
-	// 			}
-	// 		}
-
-	// 		const receiveChannelCallback = (event) => {
-	// 			const receiveChannel = event.channel
-	// 			receiveChannel.onmessage = handleReceiveMessage
-	// 			receiveChannel.onopen = handleReceiveChannelStatusChange
-	// 			receiveChannel.onclose = handleReceiveChannelStatusChange
-	// 		}
-
-	// 		pc.ondatachannel = receiveChannelCallback
-	// 	debugger
-	// 		pc.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(() => {
-	// 			// 2. Create Answer
-	// 			pc.createAnswer(this.state.sdpConstraints)
-	// 				.then(sdp => {
-	// 					pc.setLocalDescription(sdp)
-
-	// 					this.sendToPeer('answer-videocall', sdp, {
-	// 						local: this.socket.id,
-	// 						remote: data.socketID
-	// 					})
-	// 				})
-	// 		})
-	// 	})
-	// }
-
-
-	// startWebrtcOnCallersDeviceAndAssignEventsAndSendOffer = (socketID) => {
-
-	// 	// create and send offer to the peer (data.socketID)
-	// 	// 1. Create new pc
-
-	// 	this.createPeerConnection(socketID, pc => {
-	// 		// 2. Create Offer
-	// 		if (pc) {
-		
-	// 			// Send Channel
-	// 			const handleSendChannelStatusChange = (event) => {
-	// 				console.log('send channel status: ' + this.state.sendChannels[0].readyState)
-	// 			}
-
-	// 			const sendChannel = pc.createDataChannel('sendChannel')
-	// 			sendChannel.onopen = handleSendChannelStatusChange
-	// 			sendChannel.onclose = handleSendChannelStatusChange
-			
-	// 			this.setState(prevState => {
-	// 				return {
-	// 					sendChannels: [...prevState.sendChannels, sendChannel]
-	// 				}
-	// 			})
-
-	// 			// Receive Channels
-	// 			const handleReceiveMessage = (event) => {
-	// 				const message = JSON.parse(event.data)
-	// 				console.log(message)
-	// 				this.setState(prevState => {
-	// 					return {
-	// 						messages: [...prevState.messages, message]
-	// 					}
-	// 				})
-	// 			}
-
-	// 			const handleReceiveChannelStatusChange = (event) => {
-	// 				if (this.receiveChannel) {
-	// 					console.log("receive channel's status has changed to " + this.receiveChannel.readyState);
-	// 				}
-	// 			}
-
-	// 			const receiveChannelCallback = (event) => {
-	// 				const receiveChannel = event.channel
-	// 				receiveChannel.onmessage = handleReceiveMessage
-	// 				receiveChannel.onopen = handleReceiveChannelStatusChange
-	// 				receiveChannel.onclose = handleReceiveChannelStatusChange
-	// 			}
-
-	// 			pc.ondatachannel = receiveChannelCallback
-
-
-	// 			pc.createOffer(this.state.sdpConstraints)
-	// 				.then(sdp => {
-					
-	// 					pc.setLocalDescription(sdp)
-
-	// 					this.sendToPeer('offer-videocall', sdp, {
-	// 						local: this.socket.id,
-	// 						remote: socketID
-	// 					})
-	// 				})
-	// 				.catch((err) => {
-	// 					console.log('ERROR CAUGHT WHILE CREATING OFFER IN online-peer-videocall EVENT')
-	// 					console.log(err)
-	// 				})
-	// 		}
-	// 	})
+	// 	this.assignSocketEvents(this.socket)
 
 	// }
-
-
-	// assignSocketEvents = (socket_object) => {
-	// 	socket_object.on('connection-success', data => {
-	// 		// MOVED TO MAKE PHONE CALL
-	// 		this.makeVideoCall() // use this
-
-	// 		console.log(data.success)
-	// 		const status = data.peerCount > 1 ? `Total Connected Peers to room ${this.state.room}: ${data.peerCount}` : this.state.status
-
-	// 		this.setState({
-	// 			status,
-	// 			messages: data.messages
-	// 		})
-	// 	})
-
-	// 	socket_object.on('joined-peers', data => {
-
-	// 		this.setState({
-	// 			status: data.peerCount > 1 ? `Total Connected Peers to room ${this.state.room}: ${data.peerCount}` : 'Waiting for other peers to connect'
-	// 		})
-	// 	})
-
-	// 	socket_object.on('peer-disconnected', data => {
-	// 		console.log('peer-disconnected', data)
-
-	// 		const remoteStreams = this.state.remoteStreams.filter(stream => stream.id !== data.socketID)
-
-	// 		this.setState(prevState => {
-	// 			// check if disconnected peer is the selected video and if there still connected peers, then select the first
-	// 			const selectedVideo = prevState.selectedVideo.id === data.socketID && remoteStreams.length ? { selectedVideo: remoteStreams[0] } : null
-
-	// 			return {
-	// 				// remoteStream: remoteStreams.length > 0 && remoteStreams[0].stream || null,
-	// 				remoteStreams,
-	// 				...selectedVideo,
-	// 				status: data.peerCount > 1 ? `Total Connected Peers to room ${this.state.room}: ${data.peerCount}` : 'Waiting for other peers to connect'
-	// 			}
-	// 			}
-	// 		)
-	// 	})
-
-	// 	socket_object.on('online-peer-videocall', socketID => {
-
-	// 		debugger
-
-	// 		console.log('connected peers ...', socketID)
-
-	// 		this.startWebrtcOnCallersDeviceAndAssignEventsAndSendOffer(socketID)
-
-	// 	})
-
-	// 	socket_object.on('offer-videocall', data => {
-
-	// 		this.startWebrtcOnRecieversDeviceAndAssignEventsAndSendAnswer(data)
-
-	// 	})
-
-	// 	socket_object.on('answer-videocall', data => {
-	// 		// get remote's peerConnection
-	// 		const pc = this.state.peerConnections[data.socketID]
-	// 		// console.log(data.sdp)
-	// 		pc.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(()=>{})
-	// 	})
-
-	// 	socket_object.on('candidate', (data) => {
-	// 		// get remote's peerConnection
-	// 		const pc = this.state.peerConnections[data.socketID]
-
-	// 		if (pc)
-	// 			pc.addIceCandidate(new RTCIceCandidate(data.candidate))
-	// 	})
-
-	// }
-
-
-	joinRoom = () => {
-
-		this.setState({
-			connect: true,
-		})
-
-		const room = this.state.room || ''
-
-		// remove this
-		this.socket = io.connect(
-			this.serviceIP,
-			{
-				path: '/io/webrtc',
-				query: {
-					room: `/${room}`, //'/',
-				}
-			}
-		)
-
-		this.assignSocketEvents(this.socket)
-
-	}
 
 	// switchVideo = (_video) => {
 	// 	debugger
@@ -797,9 +407,9 @@ export default class IndividualChatScreen extends Component {
 				</View>
 
 				{
-					this.props.localStream &&
+					this.state.localStream &&
 					<RTCView
-						streamURL={this.props.localStream.toURL()}
+						streamURL={this.state.localStream.toURL()}
 						style={{width:200, height:200}} 
 					/>
 				}
@@ -810,15 +420,31 @@ export default class IndividualChatScreen extends Component {
 					</Button>
 				}
 
+				<Text>
+					remoteStreams:{this.state.remoteStreams}
+				</Text>
+
+				<Text>
+					remoteStream:{this.state.remoteStream}
+				</Text>
+
+
+				{this.state.remoteStreams.length > 0 && <VIEW>
+					<Text>
+						Video Call Available
+					</Text>		
+				</VIEW>
+			}
+
 				{
-					this.props.remoteStreams.length > 0 &&
-					this.props.remoteStreams.map((video_stream, index) => {
+					this.state.remoteStreams.length > 0 &&
+					this.state.remoteStreams.map((video_stream, index) => {
 						console.log('VIDEO STREAM')
 						{/*console.log(video_stream)*/}
 						{/*console.log(video_stream.stream.toURL())*/}
 						{/*console.log(video_stream.stream._tracks)*/}
 						console.log('this.props.selectedVideo')
-						console.log(this.props.selectedVideo)
+						console.log(this.state.selectedVideo)
 
 
 						{/*this.setState(prev => ({...prev, stream: video_stream.stream}))*/}
@@ -834,7 +460,7 @@ export default class IndividualChatScreen extends Component {
 									// streamURL={video_stream.stream.toURL()}
 									// streamURL={(this.state.stream !== null) ? this.state.stream.toURL() : null}
 									// streamURL={this.props.selectedVideo}
-									streamURL={this.props.selectedVideo.stream.toURL()}
+									streamURL={this.state.selectedVideo.stream.toURL()}
 									style={{width:200, height:200}} 
 								/>
 							)
@@ -844,18 +470,10 @@ export default class IndividualChatScreen extends Component {
 				}
 
 
-{/*					{
-						<RTCView
-						// console.log('VIDEO AVAILABLE')
-						streamURL={this.props.selectedVideo.toURL()}
-						// streamURL={this.props.selectedVideo}
-						style={{width:200, height:200}} 
-					/>}*/}
-
 				<TouchableHighlight activeOpacity={0.2} onPress={() => {
 					console.log(`socket id ${this.props.live_socket.id}`)
 					// console.log(this.props.live_socket.id)
-					makeVideoCall(this, this.props.live_socket.id, this.props.current_chat_screen_room_string)
+					makeVideoCall(this, this.props.current_chat_screen_room_string)
 				}} style={styles.buttonWithoutBG}>
 					<Text style={styles.innerText}>
 						Make Video Call
