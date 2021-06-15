@@ -7,9 +7,10 @@ const utils = {
 	productsEndpoint:'',
 	image:require('./images/samosa.jpg'),
 
+	righAeroIcon:'arrow-right',
 
 	// Create Account Screen
-	screen_bg:require('./images/samosa.jpg'),
+	screen_bg:require('./images/second_screen.jpg'),
 
 	// Login Screen
 	lightGrey:'grey', // font color (used in other places too)

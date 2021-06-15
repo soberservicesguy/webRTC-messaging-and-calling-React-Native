@@ -216,12 +216,11 @@ export default class LoginScreen extends Component {
 					>
 						<Icon
 						  // raised
-						  name={utils.iconName}
-						  type={utils.iconType}
+						  name={utils.righAeroIcon}
+						  type='font-awesome'
 						  // iconStyle='Outlined'
 						  color='white'
 						  size={30}
-						  style={styles.iconStyle}
 						  // onPress={() => console.log('hello')} 
 						  // reverse={true}
 						/>
