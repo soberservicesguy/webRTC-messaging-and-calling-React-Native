@@ -61,12 +61,16 @@ export const mapStateToProps = state => {
 		is_internet_connected: state.RTC.is_internet_connected,
 		network_state_permission: state.RTC.network_state_permission,
 
+		own_avatar: state.RTC.own_avatar,
+		recipents_avatar: state.RTC.recipents_avatar,
 
 	};
 };
 
 export const mapDispatchToProps = dispatch => {
 	return {
+		set_recipents_avatar: (recipents_avatar) => dispatch( { type:"SET_RECIPENTS_AVATAR", recipents_avatar: recipents_avatar } ), 
+		set_own_avatar: (own_avatar) => dispatch( { type:"SET_OWN_AVATAR", own_avatar: own_avatar } ), 
 
 		set_recipents_name: (recipents_name) => dispatch( { type:"SET_RECIPENTS_NAME", recipents_name: recipents_name } ), 
 		set_recipents_number: (recipents_number) => dispatch( { type:"SET_RECIPENTS_NUMBER", recipents_number: recipents_number } ), 

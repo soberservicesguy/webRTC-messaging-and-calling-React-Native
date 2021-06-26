@@ -1,9 +1,7 @@
 const utils = {
-	// baseURL:'https://webrtc-rest-dot-portfolio-apps-311617.uc.r.appspot.com',
-	// baseURL:'https://648f59e6f0e8.ngrok.io',
+
 	baseURL:'https://webrtc-test-rest.herokuapp.com',
 
-	// baseURL:'https://2838be54472c.ngrok.io',
 	productsEndpoint:'',
 	image:require('./images/samosa.jpg'),
 

@@ -5,7 +5,7 @@ import {
 	ImageBackground,
 	View,
 	StyleSheet, 
-	// Button,
+	Button,
 	Text,
 	TouchableOpacity,
 	TextInput,
@@ -29,6 +29,7 @@ const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 const { my_logger } = require('../handy_functions/my_custom_logger')
 
+import DocumentPicker from 'react-native-document-picker';
 
 
 import utils from "../utilities";
@@ -62,6 +63,7 @@ export default class LoginScreen extends Component {
 		this.state = {
 			phone_number: '',
 			user_name:'',
+			user_image: null,
 		}
 	}
 
@@ -108,44 +110,37 @@ export default class LoginScreen extends Component {
 	}
 
 	storeNameSpaceAtBackend(){
-		my_logger(null, null, 'function_entering', 'storeNameSpaceAtBackend')
+
+		let setOwnAvatar = (response) => this.props.set_own_avatar(response.data.image)
+		let setIsSignedIn = () => this.props.set_signed_in_status( true )
+
+		let image = this.state.user_image
+
+		let formData = new FormData()
+		formData.append('user_name', this.state.user_name)
+		formData.append('user_phone_number', this.state.phone_number)
+		formData.append('avatar_image', {uri: image.uri, name: image.name, type: image.type})
+
+		axios.post(`${utils.baseURL}/users/create-user`, formData, 
+		{
+			onUploadProgress: progressEvent => {
+				console.log( 'upload progress: ' + Math.round((progressEvent.loaded / progressEvent.total)*100) + '%' )
+			}
+		})
+		.then(function (response) {
+
+			// console.log(`POST rest call response is${JSON.stringify(response.data, null, 1)}`);
 
 
-		try{
+			if (response.data.success === true){
+				console.log('yes')
+				setOwnAvatar(response)
+				setIsSignedIn()
+				
+			}
 
-			console.log(`MAKING REQUEST AT ${utils.baseURL + '/users/create-user'}`)
-			// console.log({user_name: this.state.user_name, phone_number: this.state.phone_number})
-			axios.post(utils.baseURL + '/users/create-user', 
-				{user_name: this.state.user_name, user_phone_number: this.state.phone_number}
-			)
-			.then(function (response) {
-				console.log(`POST rest call response is${JSON.stringify(response.data, null, 1)}`);
-				if (response.data.success === true){
-					// console.log('yes')
-				}
-
-				return response
-			})
-			.then((response) => {
-				if (response.data.success === true){
-					this.props.set_signed_in_status( true )
-					// console.log('yes')
-				}
-			})
-			.catch(function (error) {
-				my_logger('error', error, 'error', 'storeNameSpaceAtBackend' )
-				// console.log(error);
-			});
-			// my_logger(returned_value, 'function_returning', 'storeNameSpaceAtBackend')
-			// return 
-
-		} catch (err) {
-			console.log(err)
-			my_logger('err', err, 'error', 'storeNameSpaceAtBackend' )
-
-		}
-
-		my_logger(null, null, 'function_exiting', 'storeNameSpaceAtBackend')
+		})
+		.catch((err) => console.log(err))
 
 	}
 
@@ -199,11 +194,35 @@ export default class LoginScreen extends Component {
 						/>
 					</View>
 						
-					<TouchableOpacity  onPress={() => {}} style={styles.buttonWithoutBG}>
-						<Text style={styles.lowerText}>
-							Already have an account ?
-						</Text>
-					</TouchableOpacity>
+
+
+					<View style={{marginTop:40, marginBottom:20}}>
+						<Button 
+							title={'Select Avatar'}
+							color={utils.lightGrey}
+							onPress={async () => {
+								try {
+									let res = await DocumentPicker.pick({
+										type: [
+											DocumentPicker.types.images,
+										],
+									});
+									console.log(res.uri, res.type, res.name, res.size); // res.type is mimeType
+									// setState method with response as argument
+									this.setState(prev => ({...prev, user_image: res}))
+									console.log(this.state.user_image)
+
+								} catch (err) {
+									if (DocumentPicker.isCancel(err)) {
+										// User cancelled the picker, exit any dialogs or menus and move on
+									} else {
+										console.log(err)
+										// throw err;
+									}
+								}
+							}}
+						/>
+					</View>
 				
 			
 					<TouchableOpacity style={styles.lowerButton} activeOpacity={0.2}
@@ -250,7 +269,8 @@ const styles = StyleSheet.create({
 		width:'100%',
 		paddingTop:15,
 		paddingBottom:15,
-		marginBottom:0,
+		marginTop:20,
+		// marginBottom:0,
 		backgroundColor: utils.lightGreen,
 	},
 

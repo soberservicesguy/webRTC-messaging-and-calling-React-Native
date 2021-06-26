@@ -1,4 +1,8 @@
 const initialState = {
+
+	own_avatar: null,
+	recipents_avatar: null,
+
 	live_socket:null,
 	socket_id:'',
 
@@ -74,6 +78,17 @@ const initialState = {
 const reducerForRTC = (state = initialState, action) => {
 
 	switch (action.type) {
+
+
+		case "SET_RECIPENTS_AVATAR":
+			return {...state, recipents_avatar: action.recipents_avatar}
+			break;
+
+		case "SET_OWN_AVATAR":
+			return {...state, own_avatar: action.own_avatar}
+			break;
+
+
 
 		case "SET_RECIPENTS_NUMBER":
 			return {...state, recipents_number: action.recipents_number}

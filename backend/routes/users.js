@@ -5,15 +5,64 @@ require('../models/user');
 const mongoose = require('mongoose');
 const router = require('express').Router();
 
-const { my_logger } = require('../handy_functions/my_custom_logger')
 const {
 	get_all_rooms_joined_by_user,
 } = require('../handy_functions/database_functions')
 
 const User = mongoose.model('User');
-// const UserCart = mongoose.model('UserCart');
 
-// create a new user
+const multer = require('multer');
+const path = require('path');
+
+const {
+	get_image_to_display,
+	get_multer_storage_to_use,
+	get_file_storage_venue,
+	get_file_path_to_use,
+
+	use_gcp_storage,
+	use_aws_s3_storage,
+
+	save_file_to_gcp,
+	gcp_bucket,
+
+	get_snapshots_storage_path,
+
+	save_file_to_aws_s3,
+
+	checkFileTypeForImages,
+} = require('../config/storage/')
+
+let timestamp
+
+
+function upload_user_avatar_image(timestamp){
+	return multer({
+		storage: get_multer_storage_to_use(timestamp), // image_storage,
+		limits:{fileSize: 2000000}, // 1 mb
+		fileFilter: function(req, file, cb){
+			checkFileTypeForUserAvatar(file, cb);
+		}
+	}).single('avatar_image'); // this is the field that will be dealt
+}
+
+
+// Check File Type
+function checkFileTypeForUserAvatar(file, cb){
+	// Allowed ext
+	let filetypes = /jpeg|jpg|png|gif/;
+	// Check ext
+	let extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+	// Check mime
+	let mimetype = filetypes.test(file.mimetype);
+
+	if(mimetype && extname){
+		return cb(null,true);
+	} else {
+		cb('Error: jpeg, jpg, png, gif Images Only!');
+	}
+}
+
 
 router.get('/get-rooms', function(req, res, next){
 	let rooms = get_all_rooms_joined_by_user(req.query.phone_number)
@@ -26,50 +75,186 @@ router.get('/get-rooms', function(req, res, next){
 
 })
 
-router.post('/create-user', function(req, res, next){
+router.post('/create-user', async function(req, res, next){
 
-	User.find({user_phone_number: req.body.user_phone_number})
-	.then((username_objects) => {
 
-		if (username_objects.length === 0) {
-			const newUser = new User({
+	timestamp = Date.now()
+	upload_user_avatar_image(timestamp)(req, res, (err) => {
 
-				_id: new mongoose.Types.ObjectId(),
-				user_name: req.body.user_name,
-				user_phone_number: req.body.user_phone_number,
+	// wrapping in IIFE since await requires async keyword which cant be applied to above multer function
+		{(async () => {
 
-			});
+			if(err){
 
-			newUser.save(function (err, newUser) {
-				if (err){
-					return console.log(err);
+				console.log(err)
+
+			} else {
+
+				if(req.file == undefined){
+
+					res.status(404).json({ success: false, msg: 'File is undefined!',file: `uploads/${req.file.filename}`})
+					return
+
+				} else {
+
+					let newUser
+					let newImage
+
+				// WE NEED UPLOADED FILES THEREFORE CREATING CONDITIONS OF USING GCP, AWS, OR DISK STORAGE
+				// not needed since we not getting the image
+
+					if (use_gcp_storage){
+
+						// console.log('req.file')
+						// console.log(req.file)
+						// console.log(filename_used_to_store_image_in_assets)
+						await save_file_to_gcp(timestamp, req.file)
+						console.log('SAVED TO GCP')
+
+					} else if (use_aws_s3_storage) {
+
+						console.log('SAVED AUTOMATICALLY TO AWS')
+
+					// not needed since we not getting the image
+						// let avatar_filename = req.file.key // name of file
+						// let avatar_location = req.file.location // url
+						// user_avatar_image_to_use = avatar_location
+
+					} else {
+
+					// not needed since we not getting the image
+						// user_avatar_image_to_use = user.user_avatar_image
+
+					}
+
+
+				// creating user, which needs image object
+					try{
+
+						let user_found = await User.findOne({ phone_number: req.body.phone_number })
+
+						if (user_found !== null){
+
+							res.status(200).json({ success: false, msg: "user already exists, try another" });
+							return
+
+						} else {
+
+							newUser = new User({
+
+								_id: new mongoose.Types.ObjectId(),
+								user_name: req.body.user_name,
+								user_phone_number: req.body.user_phone_number,
+								user_avatar_image: get_file_path_to_use(req.file, 'avatar_images', timestamp),
+								object_files_hosted_at: get_file_storage_venue(),
+
+							});
+
+						}
+
+
+					} catch (err){
+
+						console.log('user not created')
+						console.log(err)
+					}
+
+
+					await newUser.save()
+
+					let { user_avatar_image, object_files_hosted_at } = newUser
+
+					try {
+
+						image_in_base64_encoding = await get_image_to_display(user_avatar_image, object_files_hosted_at)
+
+					} catch (err){
+
+						console.log('COULDNT FETCH AVATAR')
+						console.log(err)
+
+					}
+
+
+					res.status(200).json({ success: true, image: image_in_base64_encoding, msg: 'new user saved' });
+
 				}
+			}
+		})()}
 
-				my_logger( 'user saved', {message:'user saved'}, 'value', '/create-user' , 0)
-				// console.log(`user saved`)
-			});
+	})
 
-			my_logger(`{ success: true, msg: "user saved exists" }`, { success: true, msg: "user saved exists" }, 'function_returning', '/create-user', 0)
-			res.status(200).json({ success: true, msg: "user saved exists" });
+// OLD CODE
+	// let username_objects = await User.find({user_phone_number: req.body.user_phone_number})
 
-		} else {
+	// if (username_objects.length === 0) {
+	// 	newUser = new User({
 
-			my_logger( 'user already exists', {message:'user already exists'}, 'value', '/create-user' , 0)
-			// console.log('user already exists')
-			my_logger(`{ success: false, msg: "user already exists, try another" }`, { success: false, msg: "user already exists, try another" }, 'function_returning', '/create-user', 0)
-			res.status(200).json({ success: false, msg: "user already exists, try another" });
+	// 		_id: new mongoose.Types.ObjectId(),
+	// 		user_name: req.body.user_name,
+	// 		user_phone_number: req.body.user_phone_number,
+	// 		user_avatar_image: get_file_path_to_use(req.file, 'avatar_images', timestamp),
+	// 		object_files_hosted_at: get_file_storage_venue(),
+
+	// 	});
+
+	// 	newUser.save(function (err, newUser) {
+	// 		if (err){
+	// 			return console.log(err);
+	// 		}
+
+	// 	});
+
+	// 	res.status(200).json({ success: true, msg: "user saved exists" });
+
+	// } else {
+
+	// 	res.status(200).json({ success: false, msg: "user already exists, try another" });
+
+	// }
+
+});
+
+
+router.get('/get-avatar', async function(req, res, next){
+
+	let phone_number = req.query.phone_number
+
+	let user_found = await User.findOne({ phone_number: req.body.phone_number })
+
+	if (user_found){
+
+		let { user_avatar_image, object_files_hosted_at } = user_found
+
+		try {
+
+			image_in_base64_encoding = await get_image_to_display(user_avatar_image, object_files_hosted_at)
+
+		} catch (err){
+
+			console.log('COULDNT FETCH AVATAR')
+			console.log(err)
 
 		}
 
-	})
-	.catch((error) => {
+		res.status(200).json({ success: true, image: image_in_base64_encoding });
 
-		my_logger('error', error, 'error', '/create-user', 0)
-		next(error);
+	} else {
 
-	});		
+		res.status(200).json({ success: false, msg: "user does not exist" });
+		return
 
-});
+	}
+
+
+})
+
+
+
+
+
+
+
 
 // find user
 	

@@ -95,56 +95,38 @@ export default class IndividualChatScreen extends Component {
 	}
 
 
-// not necessary
-	// joinRoom = () => {
+	getUserAvatar(){
 
-	// 	this.setState({
-	// 		connect: true,
-	// 	})
+		let { phone_number } = this.props.route.params;
 
-	// 	const room = this.state.room || ''
+		axios.get(utils.baseURL + '/users/get-avatar', {
+			params:{
+				phone_number: phone_number
+			}
+		})
+		.then(function (response) {
 
-	// 	// remove this
-	// 	this.socket = io.connect(
-	// 		this.serviceIP,
-	// 		{
-	// 			path: '/io/webrtc',
-	// 			query: {
-	// 				room: `/${room}`, //'/',
-	// 			}
-	// 		}
-	// 	)
+			// console.log(JSON.stringify(response.data));
+			if (response.data.success){
 
-	// 	this.assignSocketEvents(this.socket)
+				this.props.set_recipents_avatar(response.data.image)	
 
-	// }
+			}
 
-	// switchVideo = (_video) => {
-	// 	debugger
-	// 	// alert(_video)
-	// 	this.setState({
-	// 		selectedVideo: _video
-	// 	})
-	// }
+		})
+		.catch(function (error) {
+			console.log(error);
+		});
 
-	// stopTracks = (stream) => {
-	// 	if (stream){
-	// 		stream.getTracks().forEach(track => track.stop())
-	// 	}
-	// }
-
-
-
-
-
-
-
+	}
 
 
 
 	componentDidMount(){
 
-		console.log('CALLED-------------')
+		// console.log('CALLED-------------')
+
+		this.getUserAvatar()
 		
 
 	// COLLECTING OLD MESSAGES AND SHOWING 
@@ -321,6 +303,7 @@ export default class IndividualChatScreen extends Component {
 		return alignment
 	}
 
+
 	sendMessage(){
 
 		// console.log('ENTEREED 1')
@@ -380,25 +363,75 @@ export default class IndividualChatScreen extends Component {
 				<View style={styles.screenContainer}>
 					<FlatList // message at either left or right, check number if mine then to right, 
 						snapToInterval={100} // set it to height of component
-						// data={(this.state.messages.length > 2) ? this.state.messages : [{text:'dummy message'}]} // length > 2 because by default 2 is length of messages
-						// data={ [{text:'dummy message'}] }
-					// OLD
-						// data={ this.state.messages }
-					// NEW
 						data={ this.props.messages }
 						renderItem={
-							({ item }) => (
-								<View style={{width:'100%'}}>
-									<Text 
-										style={{
-											width:'100%',
-											textAlign: this.set_message_alignment(item),
-									}}>
-										{/*JSON.stringify(item)*/}
-										{item.text}
-									</Text>
-								</View>
-							)
+							({ item }) => {
+
+								if (this.set_message_alignment(item) === 'left'){
+
+									return(
+										
+										<View style={{width:'100%'}}>
+											<View style={{
+												flex:1,
+												height: windowHeight * 0.1, // or 100
+												justifyContent: 'center', // vertically centered
+												alignSelf: 'flex-start', // horizontally centered
+											}}>
+												<Image 
+													source={{uri: "data:image/jpeg;base64," + this.props.own_avatar}} 
+													style={{...styles.imageStyle, width:70, height:70}}
+												/>
+											</View>
+											
+											<View style={{
+												flex:4,
+											}}>
+												<Text style={{
+													width:'100%',
+													textAlign: 'left',
+												}}>
+													{item.text}
+												</Text>
+											</View>
+										</View>
+
+									)
+
+								} else {
+
+									return(
+
+										<View style={{width:'100%', flexDirection:'row'}}>
+											
+											<View style={{
+												flex:4,
+											}}>
+												<Text style={{
+													width:'100%',
+													textAlign: 'right',
+												}}>
+													{item.text}
+												</Text>
+											</View>
+
+											<View style={{
+												flex:1,
+												height: windowHeight * 0.1, // or 100
+												justifyContent: 'center', // vertically centered
+												alignSelf: 'flex-start', // horizontally centered
+											}}>
+												<Image 
+													source={{uri: "data:image/jpeg;base64," + this.props.recipents_avatar}} 
+													style={{...styles.imageStyle, width:70, height:70}}
+												/>
+											</View>
+										</View>
+
+									)
+
+								}
+							}
 						}
 						keyExtractor={() => `${Math.floor(Math.random() * 100)}-${Math.random().toString(36).substring(7)}`}
 						ref = {"flatList"}

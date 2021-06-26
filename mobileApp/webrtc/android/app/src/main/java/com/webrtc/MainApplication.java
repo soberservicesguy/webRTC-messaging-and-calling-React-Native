@@ -1,6 +1,7 @@
 package com.webrtc;
+import androidx.multidex.MultiDexApplication;
 
-import android.app.Application;
+// import android.app.Application;
 import android.content.Context;
 import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
@@ -16,7 +17,7 @@ import com.reactnativecommunity.netinfo.NetInfoPackage;
 
 import com.reactnativecommunity.rnpermissions.RNPermissionsPackage; 
 
-public class MainApplication extends Application implements ReactApplication {
+public class MainApplication extends MultiDexApplication implements ReactApplication {
 
   private final ReactNativeHost mReactNativeHost =
       new ReactNativeHost(this) {
