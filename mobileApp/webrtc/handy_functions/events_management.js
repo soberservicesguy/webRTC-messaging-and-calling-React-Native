@@ -135,7 +135,7 @@ var handleMessageAddition = async function(object, new_message){
 
 		// NOT NEEDED, IT WILL BE ONLY USED TO RECIEVE AND NOT TO SEND
 		// object.props.add_to_new_message_of_current_room( new_message )
-		object.props.add_to_messages( new_message )
+		// object.props.add_to_messages( new_message )
 		
 	} else {
 		// take all_chatnodes and set last message and unread messages in it	

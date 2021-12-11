@@ -1565,7 +1565,7 @@ messageToRelevantChatNodeOnIndividualScreen = async (room_string, object) => {
 
 		return AsyncStorage.getItem('stored_messages')
 		.then((all_messages) => {
-
+			console.log({all_messages})
 			my_logger( 'all_messages', all_messages, 'value', 'messageToRelevantChatNodeOnIndividualScreen' , 0)
 			my_logger( 'all_messages.length', all_messages.length, 'value', 'messageToRelevantChatNodeOnIndividualScreen' , 0)
 

@@ -57,8 +57,10 @@ function checkFileTypeForUserAvatar(file, cb){
 	let mimetype = filetypes.test(file.mimetype);
 
 	if(mimetype && extname){
+		console.log('FILE BEING SENT IS OK')
 		return cb(null,true);
 	} else {
+		console.log('FILE SENT IS NOT GOOD')
 		cb('Error: jpeg, jpg, png, gif Images Only!');
 	}
 }
@@ -77,12 +79,12 @@ router.get('/get-rooms', function(req, res, next){
 
 router.post('/create-user', async function(req, res, next){
 
-
 	timestamp = Date.now()
 	upload_user_avatar_image(timestamp)(req, res, (err) => {
 
 	// wrapping in IIFE since await requires async keyword which cant be applied to above multer function
 		{(async () => {
+			console.log({body:req.body, query:req.query})
 
 			if(err){
 
@@ -92,7 +94,7 @@ router.post('/create-user', async function(req, res, next){
 
 				if(req.file == undefined){
 
-					res.status(404).json({ success: false, msg: 'File is undefined!',file: `uploads/${req.file.filename}`})
+					res.status(404).json({ success: false, msg: 'File is undefined!',file: `uploads/${req.file?.filename}`})
 					return
 
 				} else {
@@ -131,15 +133,23 @@ router.post('/create-user', async function(req, res, next){
 				// creating user, which needs image object
 					try{
 
-						let user_found = await User.findOne({ phone_number: req.body.phone_number })
+						console.log('req.body.user_phone_number')
+						console.log(req.body.user_phone_number)
 
-						if (user_found !== null){
+						let user_found = await User.findOne({ user_phone_number: req.body.user_phone_number })
+
+						if (user_found !== null || typeof user !== 'undefined'){
+
+							console.log('user_found')
+							console.log(user_found)
 
 							res.status(200).json({ success: false, msg: "user already exists, try another" });
 							return
 
 						} else {
-
+							console.log(" ")
+							console.log(`SAVING USER WITH ${req.body.user_name}`)
+							console.log(" ")
 							newUser = new User({
 
 								_id: new mongoose.Types.ObjectId(),
@@ -218,26 +228,29 @@ router.post('/create-user', async function(req, res, next){
 
 router.get('/get-avatar', async function(req, res, next){
 
-	let phone_number = req.query.phone_number
+	let phone_number = req.query.user_phone_number
+	console.log('phone_number for user query')
+	console.log(phone_number)
 
-	let user_found = await User.findOne({ phone_number: req.body.phone_number })
+	let user_found = await User.findOne({ user_phone_number: phone_number })
 
-	if (user_found){
+	if (user_found !== null && typeof user_found !== 'undefined'){
 
 		let { user_avatar_image, object_files_hosted_at } = user_found
 
 		try {
 
 			image_in_base64_encoding = await get_image_to_display(user_avatar_image, object_files_hosted_at)
+			res.status(200).json({ success: true, image: image_in_base64_encoding });
 
 		} catch (err){
 
+			res.status(200).json({ success: false, msg: "couldnt fetch user avatar" });
 			console.log('COULDNT FETCH AVATAR')
 			console.log(err)
 
 		}
 
-		res.status(200).json({ success: true, image: image_in_base64_encoding });
 
 	} else {
 
@@ -249,6 +262,39 @@ router.get('/get-avatar', async function(req, res, next){
 
 })
 
+
+router.get('/get-name', async function(req, res, next){
+
+	let phone_number = req.query.user_phone_number
+
+	let user_found = await User.findOne({ user_phone_number: phone_number })
+
+	if (user_found !== null && typeof user_found !== 'undefined'){
+
+		let { user_name } = user_found
+		console.log({user_found2: user_found})
+
+		try {
+
+			res.status(200).json({ success: true, name: user_name });
+
+		} catch (err){
+
+			res.status(200).json({ success: false, msg: "couldnt fetch user name" });
+			console.log(err)
+
+		}
+
+
+	} else {
+
+		res.status(200).json({ success: false, msg: "user does not exist" });
+		return
+
+	}
+
+
+})
 
 
 

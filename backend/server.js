@@ -343,15 +343,15 @@ io.on('connection', socket => {
 
 		// console.log('_connectedPeers')
 		// console.log(_connectedPeers)
-		// for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
-		// 	// don't send to self
-		// 	if (socketID !== data.message.socketID.local) {
-		// 		console.log('socketID')
-		// 		console.log(socketID)
-		// 		console.log('socket_and_phone_number')
-		// 		console.log(socket_and_phone_number)
-		// 	}
-		// }
+		for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
+			// don't send to self
+			if (socketID !== data.message.socketID.local || socketID !== data.message.new_message.senders_details) {
+				console.log('socketID')
+				console.log(socketID)
+				console.log('socket_and_phone_number')
+				console.log(socket_and_phone_number)
+			}
+		}
 
 
 
@@ -541,6 +541,7 @@ io.on('connection', socket => {
 	})		
 
 	socket.on('bring-someone-to-your-room', (data) => {
+		console.log('1')
 		console.log('TRIGGERED bring-someone-to-your-room')
 
 
@@ -575,7 +576,7 @@ io.on('connection', socket => {
 
 			let other_persons_number = other_persons_numbers
 			required_socket_and_id = live_sockets_and_numbers.get(other_persons_number)
-			required_socket = required_socket_and_id.socket
+			required_socket = required_socket_and_id?.socket
 			required_socket_id = required_socket_and_id.socket_id
 			connect_socket_to_room(room, rooms, required_socket, required_socket_id, other_persons_number)
 		

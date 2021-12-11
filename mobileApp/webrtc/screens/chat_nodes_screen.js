@@ -26,6 +26,7 @@ import { Icon } from 'react-native-elements';
 import { Dimensions } from 'react-native';
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
+import axios from 'axios';
 
 import utils from "../utilities";
 
@@ -297,61 +298,14 @@ export default class ChatNodesScreen extends Component {
 					data={ this.props.all_chatnodes } // create DATA as list of objects
 					renderItem={
 						({ item }) => {
-							// console.log('item')
-							// console.log(item)
-							return(							
-								<TouchableOpacity activeOpacity={0.2} 
-									style={{height:windowHeight * 0.3}}
-									onPress={() => {
-
-										this.props.set_current_room_string(item.room_string)
-										
-										// console.log('item.phone_number is below')
-										// console.log(item.phone_number)
-										// this.props.navigation.navigate('IndividualChat', {phone_number: item.phoneNumbers[0].number})
-										let number_pattern1 = /\d+(?=\-)/
-										let phone_number1 = item.room_string.match( number_pattern1 )
-										phone_number1 = phone_number1[0]
-
-										let number_pattern2 = /\d+(?=\+)/
-										let phone_number2 = item.room_string.match( number_pattern2 )
-										phone_number2 = phone_number2[0]
-
-										// console.log({phone_number1:phone_number1, phone_number2:phone_number2})
-
-										let other_persons_number
-
-										other_persons_number = (this.props.own_number === phone_number1) ? phone_number2 : phone_number1 
-
-										// console.log('other_persons_number')
-										// console.log(other_persons_number)
-
-										// console.log('this.props.own_number')
-										// console.log(this.props.own_number)
-
-
-										this.props.navigation.push(
-											'IndividualChat', 
-											{phone_number: other_persons_number}
-										)
-									}}
-								> 		
-									<View>
-										<Text>
-											{item.display_name}
-										</Text>
-										<Text>
-											{item.phone_number}
-										</Text>
-										<Text>
-											{item.count}
-										</Text>
-										<Text>
-											
-										</Text>
-									</View>
-								</TouchableOpacity>
-							) //   {messageCountAndLastMessageToRelevantChatNode(this, item.room_string).count}
+							console.log('item55')
+							console.log(item)
+							return(
+								<SingleChatNode
+									item={item}
+									object={this}
+								/>
+							)
 						}
 					} // {messageCountAndLastMessageToRelevantChatNode(this, item.room_string).last_message}
 					keyExtractor={item => String( Math.floor(Math.random() * 100) )}
@@ -493,6 +447,121 @@ export default class ChatNodesScreen extends Component {
 			// </ScrollView>
 		);
 	}
+}
+
+const SingleChatNode = ({
+	object, 
+	item
+}) => {
+	const [ otherPersonsNumber, setOtherPersonsNumber ] = React.useState(null)
+	const [ otherPersonsAvatar, setOtherPersonsAvatar ] = React.useState(null)
+	const [ otherPersonsName, setOtherPersonsName ] = React.useState(null)
+
+	React.useEffect(() => {
+		console.log({count: item})
+		let other_person = item.room_string.replace(object.props.own_number, "")
+		other_person = other_person.replace("-", "")
+		other_person = other_person.replace("+", "")
+
+		setOtherPersonsNumber(other_person)
+		console.log(`about to make request with ${other_person} payload at ${utils.baseURL + '/users/get-avatar'}`)
+
+		axios.get(utils.baseURL + '/users/get-name', {
+			params:{
+				user_phone_number: other_person
+			}
+		})
+		.then(function (response) {
+
+
+			// console.log(JSON.stringify(response.data));
+			if (response.data.success){
+				console.log(`name found is ${response.name}`)
+				setOtherPersonsName(response.data.name)
+			}
+
+		})
+		.catch(function (error) {
+			console.log(error);
+		});
+
+		axios.get(utils.baseURL + '/users/get-avatar', {
+			params:{
+				user_phone_number: other_person
+			}
+		})
+		.then(function (response) {
+
+
+			// console.log(JSON.stringify(response.data));
+			if (response.data.success){
+				setOtherPersonsAvatar(response.data.image)
+			}
+
+		})
+		.catch(function (error) {
+			console.log('COULDNT FETCH USER')
+			console.log(error);
+		});
+
+
+	}, [])
+
+
+	return(
+		<TouchableOpacity activeOpacity={0.2} 
+			style={{height:windowHeight * 0.3}}
+			onPress={() => {
+
+				object.props.set_current_room_string(item.room_string)
+				let number_pattern1 = /\d+(?=\-)/
+				let phone_number1 = item.room_string.match( number_pattern1 )
+				phone_number1 = phone_number1[0]
+
+				let number_pattern2 = /\d+(?=\+)/
+				let phone_number2 = item.room_string.match( number_pattern2 )
+				phone_number2 = phone_number2[0]
+
+				let other_persons_number
+				other_persons_number = (object.props.own_number === phone_number1) ? phone_number2 : phone_number1 
+
+				object.props.navigation.push(
+					'IndividualChat', 
+					{phone_number: other_persons_number}
+				)
+			}}
+		> 		
+			<View style={{
+				paddingLeft: 30,
+				display: 'flex',
+				flexDirection: 'row'
+			}}>
+				<View style={{flex: 1}}>
+					<Image 
+						source={{uri: "data:image/jpeg;base64," + otherPersonsAvatar}} 
+						style={{
+							width:70, 
+							height:70,
+							borderRadius: 300/2,
+						}}
+					/>
+				</View>
+				<View style={{flex :4}}>
+					<Text style={{color: 'grey', fontSize: 20}}>
+						{otherPersonsNumber}
+					</Text>
+					<Text style={{fontWeight: 'bold', fontSize: 30,}}>
+						{otherPersonsName}
+					</Text>
+					<Text>
+						{(Number(item.count) > 0) ? `${item.count} New Messages` :  null}
+					</Text>
+					<Text>
+					</Text>					
+				</View>
+			</View>
+		</TouchableOpacity>
+	);
 }
 
 const styles = StyleSheet.create({

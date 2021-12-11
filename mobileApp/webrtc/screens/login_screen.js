@@ -120,7 +120,7 @@ export default class LoginScreen extends Component {
 		formData.append('user_name', this.state.user_name)
 		formData.append('user_phone_number', this.state.phone_number)
 		formData.append('avatar_image', {uri: image.uri, name: image.name, type: image.type})
-
+		
 		axios.post(`${utils.baseURL}/users/create-user`, formData, 
 		{
 			onUploadProgress: progressEvent => {
