@@ -231,7 +231,6 @@ io.on('connection', socket => {
 		console.log('onlinePeers TRIGGERED')
 
 		console.log('data in onlinePeers-videocall')
-		console.log(data)
 
 		let room = data.payload.room
 
@@ -240,13 +239,16 @@ io.on('connection', socket => {
 		for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
 			// don't send to self
 			if (socketID !== data.socketID.local) {
+				console.log({local: data.socketID.local, socketID})
 				// console.log('online-peer-videocall', data.socketID, socketID)
 				
 				socket_and_phone_number.socket.emit(
 					'online-peer-videocall', 
 					{
 						socketID: socketID, 
+						remote: socketID, 
 						room: room,
+						local: data.socketID.local,
 					}
 				)
 
@@ -254,22 +256,52 @@ io.on('connection', socket => {
 		}
 	})
 
-	socket.on('offer-videocall', data => {
+	socket.on('candidate', (data) => {
 		// console.log(data)
+		console.log('CANDIDATE TRIGGERED')
+		console.log({candidate:data.payload.candidate})
+// 
+		let room = data.payload.room
+
+		const _connectedPeers = rooms[room]
+		// send candidate to the other peer(s) if any
+		// for (const [socketID, socket] of _connectedPeers.entries()) {
+		for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
+
+			if (socketID === data.socketID.remote) {
+			// if (socketID !== data.socketID) {
+				socket_and_phone_number.socket.emit('candidate', {
+					candidate: data.payload.candidate,
+					socketID: data.socketID,
+					local: data.socketID.local,
+					remote: data.socketID.remote,
+				})
+				console.log(`CANDIDATE SENT TO ${socketID}`)
+				console.log({socketID: data.socketID, local: data.socketID.local, remote: data.socketID.remote,})
+			}
+		}
+	})
+
+	socket.on('offer-videocall', data => {
+		console.log('offer-videocall TRIGGERED')
+		console.log(data)
 		let room = data.payload.room
 		const _connectedPeers = rooms[room]
 
 		for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
 			// don't send to self
 			// if (socketID === data.socketID.remote) {
-			if (socketID !== data.payload.remote) {
+			if (socketID === data.payload.remote) {
 				// console.log('Offer', socketID, data.socketID, data.payload.type)
 				socket_and_phone_number.socket.emit('offer-videocall', {
 					sdp: data.payload.sdp,
 					socketID: data.socketID.local,
+					local: data.socketID.local,
+					remote: data.socketID.remote,
 					room:room,
 				})
 				console.log(`OFFER SENT ${socketID}`)
+				console.log({socketID: data.socketID.local, local: data.socketID.local, remote: data.socketID.remote, room:room,})
 			}
 		}
 	})
@@ -280,47 +312,27 @@ io.on('connection', socket => {
 		let room = data.payload.room
 
 		console.log('data.payload.sdp in answer')
-		console.log(data.payload.sdp)
+		// console.log(data.payload.sdp)
 
 		const _connectedPeers = rooms[room]
 		// for (const [socketID, socket] of _connectedPeers.entries()) {
 		for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
 
 			// if (socketID === data.socketID.remote) {
-			if (socketID !== data.payload.remote) {
+			if (socketID === data.payload.remote) {
 
 				socket_and_phone_number.socket.emit('answer-videocall', {
 					sdp: data.payload.sdp,
 					socketID: data.socketID.remote,
+					local: data.socketID.local,
+					remote: data.socketID.remote,
 				})
 				console.log(`ANSWER SENT TO ${socketID}`)
-
+				console.log({socketID: data.socketID.remote,local: data.socketID.local, remote: data.socketID.remote,})
 			}
 		}
 	})
 
-
-
-	socket.on('candidate', (data) => {
-		console.log(data)
-		console.log('CANDIDATE TRIGGERED')
-// 
-		let room = data.payload.room
-
-		const _connectedPeers = rooms[room]
-		// send candidate to the other peer(s) if any
-		// for (const [socketID, socket] of _connectedPeers.entries()) {
-		for (const [socketID, socket_and_phone_number] of _connectedPeers.entries()) {
-
-			if (socketID !== data.socketID) {
-				socket_and_phone_number.socket.emit('candidate', {
-					candidate: data.payload.candidate,
-					socketID: data.socketID
-				})
-				console.log(`CANDIDATE SENT TO ${socketID}`)
-			}
-		}
-	})
 
 
 
@@ -347,9 +359,9 @@ io.on('connection', socket => {
 			// don't send to self
 			if (socketID !== data.message.socketID.local || socketID !== data.message.new_message.senders_details) {
 				console.log('socketID')
-				console.log(socketID)
-				console.log('socket_and_phone_number')
-				console.log(socket_and_phone_number)
+				// console.log(socketID)
+				// console.log('socket_and_phone_number')
+				// console.log(socket_and_phone_number)
 			}
 		}
 

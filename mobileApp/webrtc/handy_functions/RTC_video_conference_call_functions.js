@@ -50,8 +50,6 @@ setSelfUserDetails = (user_details) => {
 
 	console.log('setSelfUserDetails TRIGGERED')
 
-	my_logger(null, null, 'function_entering', 'setSelfUserDetails', 0)
-
 	try{
 
 		// saving namespace in database
@@ -97,7 +95,6 @@ assign_socket_events = async (socket_object, object) => {
 	// NEW WEBRTC EVENTS
 	socket_object.on('connection-success', data => {
 
-		console.log(data.success)
 		const status = data.peerCount > 1 ? `Total Connected Peers to room ${object.state.room}: ${data.peerCount}` : object.state.status
 
 
@@ -111,8 +108,8 @@ assign_socket_events = async (socket_object, object) => {
 			// below is promise
 			() => {
 				console.log(`after state change in connection-success is status:${object.state.status}, messages:${object.state.messages}`)
-				console.log('COMPLETE STATE IS BELOW')
-				console.log(object.state)
+				// console.log('COMPLETE STATE IS BELOW')
+				// console.log(object.state)
 			}
 		)
 	})
@@ -127,15 +124,15 @@ assign_socket_events = async (socket_object, object) => {
 			// below is promise
 			() => {
 				console.log(`after state change in joined-peers is status:${object.state.status}`)
-				console.log('COMPLETE STATE IS BELOW')
-				console.log(object.state)
+				// console.log('COMPLETE STATE IS BELOW')
+				// console.log(object.state)
 			}
 		)
 
 	})
 
 	socket_object.on('peer-disconnected', data => {
-		console.log('peer-disconnected', data)
+		// console.log('peer-disconnected', data)
 
 		const remoteStreams = object.state.remoteStreams.filter(stream => stream.id !== data.socketID)
 
@@ -154,8 +151,8 @@ assign_socket_events = async (socket_object, object) => {
 			// below is promise
 			() => {
 				console.log(`after state change in peer-disconnect is status:${object.state.status}, remoteStreams:${object.state.remoteStreams}, selectedVideo:${object.state.selectedVideo}`)
-				console.log('COMPLETE STATE IS BELOW')
-				console.log(object.state)
+				// console.log('COMPLETE STATE IS BELOW')
+				// console.log(object.state)
 			}
 		)
 
@@ -180,10 +177,10 @@ assign_socket_events = async (socket_object, object) => {
 
 	socket_object.on('answer-videocall', data => {
 		// get remote's peerConnection
-		console.log('object.state.peerConnections IN answer-videocall')
-		console.log(object.state.peerConnections)
-		console.log('data.socketID IN answer-videocall')
-		console.log(data.socketID)
+		// console.log('object.state.peerConnections IN answer-videocall')
+		// console.log(object.state.peerConnections)
+		// console.log('data.socketID IN answer-videocall')
+		// console.log(data.socketID)
 		const pc = object.state.peerConnections[data.socketID]
 		// console.log('data.socketID in ANSWER')
 		// console.log(data.socketID)
@@ -215,6 +212,12 @@ assign_socket_events = async (socket_object, object) => {
 		// console.log(data.socketID)
 
 		const pc = object.state.peerConnections[data.socketID.remote]
+		console.log(' ')
+		console.log(' ')
+		console.log('THIS')
+		console.log({candidate: data.candidate})
+		console.log(' ')
+		console.log(' ')
 
 		if (pc)
 			pc.addIceCandidate(new RTCIceCandidate(data.candidate))
@@ -223,7 +226,7 @@ assign_socket_events = async (socket_object, object) => {
 
 	socket_object.on('message', async data => {
 		console.log('============TEST MESSAGE RECIEVED==========')
-		console.log('message', data)
+		// console.log('message', data)
 
 		try{
 			let emit_message = await emit_new_message_recieved(object, data)
@@ -292,7 +295,6 @@ sendToPeer = (object, messageType, payload, socketID) => {
 
 	}
 
-	my_logger(null, null, 'function_exiting', 'sendToPeer', 0)
 	
 }
 
@@ -337,7 +339,7 @@ startWebrtcOnRecieversDeviceAndAssignEventsAndSendAnswer = (object, data) => {
 					prev => {
 
 						console.log('prev.sendChannels in RECIEVER')
-						console.log(prev.sendChannels)
+						// console.log(prev.sendChannels)
 
 						if (prev.sendChannels === null || typeof prev.sendChannels === 'undefined'){
 							prev.sendChannels = []
@@ -350,8 +352,8 @@ startWebrtcOnRecieversDeviceAndAssignEventsAndSendAnswer = (object, data) => {
 					// below is promise
 					() => {
 						console.log(`after state change in startWebrtcOnRecieversDeviceAndAssignEventsAndSendAnswer is sendChannels:${object.state.sendChannels}, `)
-						console.log('COMPLETE STATE IS BELOW')
-						console.log(object.state)
+						// console.log('COMPLETE STATE IS BELOW')
+						// console.log(object.state)
 					}
 				)
 				
@@ -359,7 +361,7 @@ startWebrtcOnRecieversDeviceAndAssignEventsAndSendAnswer = (object, data) => {
 				// Receive Channels
 				const handleReceiveMessage = (event) => {
 					const message = JSON.parse(event.data)
-					console.log(message)
+					// console.log(message)
 
 					object.setState(
 						prev => {
@@ -373,8 +375,8 @@ startWebrtcOnRecieversDeviceAndAssignEventsAndSendAnswer = (object, data) => {
 							// below is promise
 							() => {
 								console.log(`after state change in handleReceiveMessage at startWebrtcOnRecieversDeviceAndAssignEventsAndSendAnswer is messages:${object.state.messages}, `)
-								console.log('COMPLETE STATE IS BELOW')
-								console.log(object.state)
+								// console.log('COMPLETE STATE IS BELOW')
+								// console.log(object.state)
 							}
 					)
 
@@ -415,6 +417,8 @@ startWebrtcOnRecieversDeviceAndAssignEventsAndSendAnswer = (object, data) => {
 									remote: data.socketID
 								}
 							)
+							console.log('answer-videocall SENT')
+							console.log({local: object.props.live_socket.id, remote: data.socketID})
 						})
 				})
 			}
@@ -469,8 +473,8 @@ startWebrtcOnCallersDeviceAndAssignEventsAndSendOffer = (object, data) => {
 				// below is promise
 				() => {
 					console.log(`after state change in startWebrtcOnCallersDeviceAndAssignEventsAndSendOffer is sendChannels:${object.state.sendChannels}, `)
-					console.log('COMPLETE STATE IS BELOW')
-					console.log(object.state)
+					// console.log('COMPLETE STATE IS BELOW')
+					// console.log(object.state)
 				}
 			)
 
@@ -479,7 +483,7 @@ startWebrtcOnCallersDeviceAndAssignEventsAndSendOffer = (object, data) => {
 			// Receive Channels
 			const handleReceiveMessage = (event) => {
 				const message = JSON.parse(event.data)
-				console.log(message)
+				// console.log(message)
 
 				object.setState(
 					prev => {
@@ -493,8 +497,8 @@ startWebrtcOnCallersDeviceAndAssignEventsAndSendOffer = (object, data) => {
 					// below is promise
 					() => {
 						console.log(`after state change in at handleReceiveMessage in startWebrtcOnCallersDeviceAndAssignEventsAndSendOffer is messages:${object.state.messages}, `)
-						console.log('COMPLETE STATE IS BELOW')
-						console.log(object.state)
+						// console.log('COMPLETE STATE IS BELOW')
+						// console.log(object.state)
 					}
 				)
 
@@ -528,6 +532,7 @@ startWebrtcOnCallersDeviceAndAssignEventsAndSendOffer = (object, data) => {
 					pc.setLocalDescription(sdp)
 
 					console.log('DONE 20')
+					console.log({remote: data.socketID, local: object.props.live_socket.id,})
 					sendToPeer(
 						object,
 						'offer-videocall', 
@@ -718,6 +723,7 @@ createPeerConnection = (object, source, room_string, socketID, callback) => {
 						remote: socketID,
 					}
 				)
+				console.log({local: object.props.live_socket.id, remote: socketID,})
 			}
 		}
 
@@ -818,8 +824,8 @@ createPeerConnection = (object, source, room_string, socketID, callback) => {
 				// below is promise
 				() => {
 					console.log(`after state change in at in onaddstream ${source} in peerConnections is selectedVideo:${object.state.selectedVideo}, remoteStream:${object.state.remoteStream}, remoteStreams:${object.state.remoteStreams}`)
-					console.log('COMPLETE STATE IS BELOW')
-					console.log(object.state)
+					// console.log('COMPLETE STATE IS BELOW')
+					// console.log(object.state)
 				}
 			)
 
